@@ -30,12 +30,12 @@ file(GLOB helloworld_SRCS1
      "${CMAKE_CURRENT_LIST_DIR}/DB/*.cpp"
      "${CMAKE_CURRENT_LIST_DIR}/debuge_tools/*.cpp"
      "${CMAKE_CURRENT_LIST_DIR}/base/*.cpp"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/GameCore/*.cpp"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/base_message/*.cpp"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/cocos2d_server/*.cpp"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/game_message/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/Classes/GameCore/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/base_message/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/cocos2d_server/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/Classes/game_message/*.cpp"
      "${CMAKE_CURRENT_LIST_DIR}/Classes/*.cpp"
-     "${CMAKE_CURRENT_SOURCE_DIR}/../../Classes/ImportantCommon/MathShapeUtils/*.cpp"
+     "${CMAKE_CURRENT_SOURCE_DIR}/Classes/MathShapeUtils/*.cpp"
 
 )
 file(GLOB helloworld_HEAD1
@@ -43,10 +43,10 @@ file(GLOB helloworld_HEAD1
      "${CMAKE_CURRENT_LIST_DIR}/DB/*.h"
      "${CMAKE_CURRENT_LIST_DIR}/debuge_tools/*.h"
      "${CMAKE_CURRENT_LIST_DIR}/base/*.h"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/GameCore/*.h"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/base_message/*.h"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/cocos2d_server/*.h"
-     "${CMAKE_CURRENT_LIST_DIR}/../../Classes/game_message/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/Classes/GameCore/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/base_message/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/cocos2d_server/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/Classes/game_message/*.h"
      "${CMAKE_CURRENT_LIST_DIR}/Classes/*.h"
 
 )
