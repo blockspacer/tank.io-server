@@ -357,7 +357,7 @@ public:
     static long long get_random_long_long();
     virtual void first_udp_ping(UserPort *u){};
     virtual RegisterResponse *register_user(const Register *rgister_msg,std::string);
-    virtual bool login_user(LoginMSG *msg,UserData **user_Data);
+    virtual UserData *login_user(LoginMSG *msg);
 
     virtual void recive_msg(UserPort *s, BaseMessage *msg,size_t byte_size){}
     virtual void recive_tcp_msg(UserPort *s, BaseMessage *msg){}

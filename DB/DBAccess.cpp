@@ -494,15 +494,15 @@ void DBAccess::load_extra(USER_ID user_id){
     }
 }
 
-bool DBAccess::login(USER_ID user_id,PASSWORD pass,UserData **user_data){
+UserData *DBAccess::login(USER_ID user_id,PASSWORD pass){
     auto p=get_user_data_by_id(user_id);
     if(p!=nullptr && strcmp(p->pass,pass)==0){
-        return true;
+        return p;
     }
-    return false;
+    return nullptr;
     //cerr<<users[user_id].pass<<" <> "<<pass<<endl;
     //printf("%s %s",users[user_id].pass,pass);
-    return false;/**/
+    //return false;/**/
 
    /* QSqlQuery query;
     query.prepare("SELECT "

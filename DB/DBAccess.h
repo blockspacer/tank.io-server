@@ -119,7 +119,7 @@ class DBAccess
 public:
     DBAccess(BaseServer *ser);
     void connect();
-    bool login(USER_ID user_id,PASSWORD pass,UserData **display_name);
+    UserData *login(USER_ID user_id,PASSWORD pass);
     int fake_register_id=0;
     RegisterResponse *register_user(const REGISTER_CODE code,std::string);
     bool change_display_name(UserData *ud);

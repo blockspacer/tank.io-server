@@ -134,7 +134,8 @@ void LoginJob::do_job(){
 
         LoginResponse r;
         r.user_id=login.user_id;
-        r.done=server->login_user(&login,&(ses->user_data));
+        ses->user_data=server->login_user(&login);
+        r.done=(ses->user_data!=nullptr);
 
 
 
@@ -459,10 +460,11 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
         if(msg->base_type==BaseMessage::BaseType::LOGIN )
         {
             cerr<<"login msg"<<endl;
-            UserData *user_data;
+
             LoginResponse r;
             r.user_id=msg->user_id;
-            r.done=login_user((LoginMSG*)msg,&user_data);
+            UserData *user_data=login_user((LoginMSG*)msg);
+            r.done=(user_data!=nullptr);
 
             cerr<<"r.done "<<r.done<<endl;
             UserPort *ses=nullptr;
@@ -675,10 +677,11 @@ void BaseServer::tcp_recive(TcpConnection *tcp_conection,boost::system::error_co
                 ++login_count;
                 DEBUGE(cerr<<"BaseMessage::BaseType::LOGIN"<<endl);
                 DEBUGE(cerr<<"rquest user "<<msg->user_id<<" to login"<<endl);
-                UserData *user_data;
+
                 LoginResponse r;
                 r.user_id=msg->user_id;
-                r.done=login_user((LoginMSG*)msg,&user_data);
+                UserData *user_data=login_user((LoginMSG*)msg);
+                r.done=(user_data!=nullptr);
                 UserPort *ses=nullptr;
                 if(r.done ){
                     ses=users_with_id(r.user_id);
@@ -933,11 +936,11 @@ void BaseServer::db_dun(){
 RegisterResponse *BaseServer::register_user(const Register *rgister_msg,std::string ip){
     return db->register_user(rgister_msg->code,ip);
 }
-bool BaseServer::login_user(LoginMSG *msg,UserData **user_Data){
+UserData *BaseServer::login_user(LoginMSG *msg){
 
     DEBUGE(cerr<<"user "<<msg->user_id<<" "<<msg->password<<endl);
 
-    return db->login(msg->user_id,msg->password,user_Data);
+    return db->login(msg->user_id,msg->password);
 
 }
 
