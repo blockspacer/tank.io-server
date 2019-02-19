@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.1.0)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions(-std=gnu++0x)
+endif()
+
 project(tank-io.server2)
 
 # Find includes in corresponding build directories
