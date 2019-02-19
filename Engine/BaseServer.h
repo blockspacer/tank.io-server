@@ -462,7 +462,10 @@ public:
     //boost::mutex data_base_jobsMutex;
     //std::queue<BaseJob*> data_base_jobs;
     //LoginJob logins[1024*1024];
-    AsyncQueue<BigestDBJob,1024> *db_jobs;
+    struct DbJobManager{
+
+    };
+    queue<std::shared_ptr<DBJob>> db_jobs;
 
     boost::condition_variable data_base;
     mutable boost::mutex newTaskMutex;

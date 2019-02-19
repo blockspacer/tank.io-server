@@ -305,11 +305,11 @@ void BaseServer::set_app_version(USER_ID user_id,int ap){
         UserPort *up=users_with_id(user_id);
 
         SharedUdpEndPointMemory::update(user_id,up->get_zip());
-        SaveAppVersion *lj=(SaveAppVersion*)db_jobs->reserve_new();
-        if(lj!=nullptr){
-            lj->init(user_id,this);
-            db_jobs->complte_last_reserved();
-        }
+
+        auto lj=std::make_shared<SaveAppVersion>();
+        lj->init(user_id,this);
+        db_jobs.push(lj);
+
     }
 
 }
@@ -328,7 +328,6 @@ BaseServer::BaseServer(boost::asio::io_service& io_service, short port)
     //buffer=new MsgBlock[1024*1024];
     cerr<<"server::Server"<<endl;
     db=new DBAccess(this);
-    db_jobs=new AsyncQueue<BigestDBJob,1024>();
     boost::thread_group threads;
 
 
@@ -572,16 +571,13 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
 
                              if (prd.private_key == r->private_key || true){
 
-                                RegisterJob *lj=(RegisterJob*)db_jobs->reserve_new();
+                                auto lj=std::make_shared<RegisterJob>();
+                                lj->init(nullptr,sender_endpoint_,r,sender_endpoint_.address());
+                                db_jobs.push(lj);
 
-                                if(lj!=nullptr){
-                                    pre_register_data.erase(r->id_and_public_key);
+                                pre_register_data.erase(r->id_and_public_key);
 
-                                    lj->init(nullptr,sender_endpoint_,r,sender_endpoint_.address());
-                                    db_jobs->complte_last_reserved();
 
-                                    //data_base.notify_one();
-                                }
                              }
 
                             //data_base.notify_one();
@@ -655,16 +651,16 @@ void BaseServer::tcp_recive(TcpConnection *tcp_conection,boost::system::error_co
 
 
 
-                        RegisterJob *lj=(RegisterJob*)db_jobs->reserve_new();
+                        auto lj=std::make_shared<RegisterJob>();
 
-                        if(lj!=nullptr){
-                            pre_register_data.erase(r->id_and_public_key);
-                            //LoginJob *j=LoginJob::create(this,s,(LoginMSG*)msg);
-                            udp::endpoint udp_connection;
-                            lj->init(tcp_conection,udp_connection,r,tcp_conection->tcp_socket.remote_endpoint().address());
-                            db_jobs->complte_last_reserved();
 
-                        }/**/
+                        pre_register_data.erase(r->id_and_public_key);
+                        //LoginJob *j=LoginJob::create(this,s,(LoginMSG*)msg);
+                        udp::endpoint udp_connection;
+                        lj->init(tcp_conection,udp_connection,r,tcp_conection->tcp_socket.remote_endpoint().address());
+                        db_jobs.push(lj);
+
+
                      }
 
                     //data_base.notify_one();
@@ -777,9 +773,9 @@ void BaseServer::tcp_recive(TcpConnection *tcp_conection,boost::system::error_co
 }
 
 void BaseServer::use_buy_item(int db_id){
-    SetBuyItemUsed *t=(SetBuyItemUsed*)db_jobs->reserve_new();
+    std::shared_ptr<SetBuyItemUsed> t=std::make_shared<SetBuyItemUsed>();
     t->init(db_id,this);
-    db_jobs->complte_last_reserved();
+    db_jobs.push(t);
 }
 
 
@@ -904,21 +900,21 @@ void BaseServer::db_dun(){
            // cerr<<"-------------------------db-------------  "<<logins->size()<<" -- "<<db_query<<" "<<login_count<<endl;
 
         //data_base_jobsMutex.lock();
-        db_query+=db_jobs->completed_size();
-        int tn=db_jobs->completed_size();
+        db_query+=db_jobs.size();
+        int tn=db_jobs.size();
 
        // data_base_jobsMutex.unlock();
         long long ts=clock();
 
-       while(db_jobs->completed_size()){
+       while(db_jobs.size()){
 
            DEBUGE(cerr<<"on que "<<n-i<<endl);
 
-           BaseJob *job=db_jobs->front();
+           auto job=db_jobs.front();
 
 
            job->do_job();
-           db_jobs->pop();
+           db_jobs.pop();
        }
         ts=clock()-ts;
         if(ts<1)
@@ -1000,7 +996,10 @@ long long BaseServer::get_random_long_long(){
    return  t;
 }
 UserPort *BaseServer::users_with_id(const USER_ID &user_id){
-    return (UserPort*)(get_user_data_by_id(user_id)->port);
+    auto p=get_user_data_by_id(user_id);
+    if(p==nullptr)
+        return nullptr;
+    return (UserPort*)(p->port);
 }
 void BaseServer::users_with_id_push(const USER_ID &user_id, UserPort *user_port){
     UserData *ud=get_user_data_by_id(user_id);

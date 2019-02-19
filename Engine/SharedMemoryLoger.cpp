@@ -42,7 +42,7 @@ void SharedMemoryLoger::init_memory(){
          }
     for(int i=0; i<100000000;++i){
         //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-        LogMsg *msg=s->reserve_new();
+         auto msg=s->reserve_new<LogMsg>();
         if(msg==nullptr){
             cerr<<"buffer por shod";
             boost::this_thread::sleep(boost::posix_time::milliseconds(10));
