@@ -24,16 +24,19 @@ RUN apt-get install -y postgresql-client libpq-dev
 RUN apt-get install -y libqt5sql5-psql
 
 
+RUN apt-get install  -y gcc 
+
+RUN g++ --version
 # Download boost, untar, setup install with bootstrap and only do the Program Options library,
 # and then install
 
 #WORKDIR home
-#RUN wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz 
-#RUN tar xfz boost_1_69_0.tar.gz 
-#RUN rm boost_1_69_0.tar.gz 
-#RUN cd boost_1_69_0 \
-#&& ./bootstrap.sh --prefix=/usr/local --with-libraries=program_options \
-#&& ./b2 install 
+RUN wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz 
+RUN tar xfz boost_1_69_0.tar.gz 
+RUN rm boost_1_69_0.tar.gz 
+RUN cd boost_1_69_0 \
+&& ./bootstrap.sh --prefix=/usr/local --with-libraries=program_options \
+&& ./b2 install 
   
 RUN pwd
 RUN ls
