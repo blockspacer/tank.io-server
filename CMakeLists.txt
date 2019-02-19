@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-add_definitions(-std=gnu++0x)
-
-
 project(tank-io.server2)
 
 # Find includes in corresponding build directories
