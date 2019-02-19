@@ -52,7 +52,7 @@ void DBAccess::connect(){
     string EXAMPLE_HOST="192.168.1.4",EXAMPLE_DB="super_goal";
     EXAMPLE_HOST="192.168.1.3";
     EXAMPLE_HOST="localhost";
-    std::string EXAMPLE_USER ="super_goal";
+    std::string EXAMPLE_USER ="super_goal1";
     std::string EXAMPLE_PASS ="amarokgames33";
     std::ifstream fin("/var/game_server/db.config");
     {
@@ -143,41 +143,42 @@ DBAccess::DBAccess(BaseServer *_server)
 
         }
         max_user_id=0;
-        users=new UserData[1000*1000];
          while (query.next()) {
            int user_id = query.value(0).toInt();
-           UserData &user_data=users[user_id];
-           users[user_id].id=user_id;
-           strcpy(user_data.pass,query.value(1).toString().toStdString().c_str());
-           strcpy(user_data.display_name,query.value(2).toString().toStdString().c_str());
-           user_data.level=query.value(3).toInt();
-           user_data.coin=query.value(4).toInt();
-           user_data.win_number=query.value(5).toInt();
-           user_data.lose_number=query.value(6).toInt();
-           user_data.avatar_id=query.value(7).toInt();
-           user_data.exp=query.value(8).toInt();
-           user_data.total_coin_winer=query.value(9).toLongLong();
-          // user_data.app_version=query.value(10).toInt();
-          // user_data.name_changed=query.value(11).toInt();
+           auto user_data=std::make_shared<UserData>();
+           //users[user_id].id=user_id;
+           strcpy(user_data->pass,query.value(1).toString().toStdString().c_str());
+           strcpy(user_data->display_name,query.value(2).toString().toStdString().c_str());
+           user_data->level=query.value(3).toInt();
+           user_data->coin=query.value(4).toInt();
+           user_data->win_number=query.value(5).toInt();
+           user_data->lose_number=query.value(6).toInt();
+           user_data->avatar_id=query.value(7).toInt();
+           user_data->exp=query.value(8).toInt();
+           user_data->total_coin_winer=query.value(9).toLongLong();
+          // user_data->app_version=query.value(10).toInt();
+          // user_data->name_changed=query.value(11).toInt();
 
            ++max_user_id;
-           sorted_list.change_user(user_data.id);
-
+           sorted_list.change_user(user_data->id);
+           users[user_data->id]=user_data;
 
          }
 
 
 }
 void DBAccess::add_user_mony(USER_ID user_id,unsigned long long mony){
-    if(user_id<10 &&  user_id>200000 &&users[user_id].state!=UserData::STATE::ACTIVE)
+    if(user_id<10 &&  user_id>200000 &&
+            users.find(user_id)==users.end()
+            && users[user_id]->state!=UserData::STATE::ACTIVE)
         return ;
-    users[user_id].coin+=mony;
+    users[user_id]->coin+=mony;
 
 }
 
 void DBAccess::set_buy_item_used(int db_id){
     QSqlQuery query;
-    UserData &data=users[db_id];
+    //auto &data=users[db_id];
     query.prepare("UPDATE buying_row SET "
                         "is_cunsumed = TRUE "
                    " WHERE id = :id");
@@ -199,11 +200,11 @@ void DBAccess::set_buy_item_used(int db_id){
 }
 bool DBAccess::save_app_version(USER_ID user_id ){
     QSqlQuery query;
-    UserData &data=users[user_id];
+    auto &data=users[user_id];
     query.prepare("UPDATE player SET "
                         "app_version=:app_version"
                    " WHERE id=:id");
-    query.bindValue(":app_version", data.app_version);
+    query.bindValue(":app_version", data->app_version);
 
     if(query.exec()){
         return true;
@@ -256,7 +257,7 @@ int DBAccess::get_top_hundred(UserData *user_data,int shift, int count,int &rank
 
 bool DBAccess::save_user_data(USER_ID user_id ){
     QSqlQuery query;
-    UserData &data=users[user_id];
+    auto &data=users[user_id];
     query.prepare("UPDATE player SET "
                         "mony=:mony ,"
                         "coin=:coin ,"
@@ -273,14 +274,14 @@ bool DBAccess::save_user_data(USER_ID user_id ){
                         "app_version=:app_version "
                    " WHERE id=:id");
     query.bindValue(":id", user_id);
-    query.bindValue(":coin", data.coin);
-    query.bindValue(":lose_number", data.lose_number);
-    query.bindValue(":win_number", data.win_number);
-    query.bindValue(":avatar_id", data.avatar_id);
-    query.bindValue(":exp", data.exp);
-    query.bindValue(":level", data.level);
-    query.bindValue(":total_coin_winer", data.total_coin_winer);
-    query.bindValue(":app_version", data.app_version);
+    query.bindValue(":coin", data->coin);
+    query.bindValue(":lose_number", data->lose_number);
+    query.bindValue(":win_number", data->win_number);
+    query.bindValue(":avatar_id", data->avatar_id);
+    query.bindValue(":exp", data->exp);
+    query.bindValue(":level", data->level);
+    query.bindValue(":total_coin_winer", data->total_coin_winer);
+    query.bindValue(":app_version", data->app_version);
 
     if(query.exec()){
         return true;
@@ -351,7 +352,9 @@ bool DBAccess::change_display_name(UserData *user){
 
 }
 UserData *DBAccess::get_user_data_by_id(USER_ID user_id){
-    return users+user_id;
+    if(users.find(user_id)==users.end())
+        return nullptr;
+    return users[user_id].get();
 }
 void DBAccess::load_extra_if_not_exist(USER_ID user_id){
     UserData *ud=get_user_data_by_id(user_id);
@@ -492,10 +495,11 @@ void DBAccess::load_extra(USER_ID user_id){
 }
 
 bool DBAccess::login(USER_ID user_id,PASSWORD pass,UserData **user_data){
-    if(user_id>0 &&  user_id<2000000 && strcmp(users[user_id].pass,pass)==0){
-        *user_data=users+user_id;
+    auto p=get_user_data_by_id(user_id);
+    if(p!=nullptr && strcmp(p->pass,pass)==0){
         return true;
     }
+    return false;
     //cerr<<users[user_id].pass<<" <> "<<pass<<endl;
     //printf("%s %s",users[user_id].pass,pass);
     return false;/**/
@@ -577,8 +581,9 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
     }else{
         r->done=false;
         cerr<<"error0:"<<query.lastError().text().toStdString()<<endl;
-
-        return r;
+        r->user_id=users.size()+1;
+        r->done=true;
+        //return r;
         //r->done=true;
         //r->user_id=fake_register_id++;
     }
@@ -590,16 +595,18 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
     else
         cerr<<"can not create"<<endl;
     if(r->done){
-        users[r->user_id].id=r->user_id;
-        strcpy(users[r->user_id].pass,r->pass);
+        auto user_data=std::make_shared<UserData>();
+        user_data->id=r->user_id;
+        strcpy(user_data->pass,r->pass);
         char dname[256];
         sprintf(dname,"مهمان %d",max_user_id);
-        strcpy(users[r->user_id].display_name,dname);
-        users[r->user_id].coin=50;
-        users[r->user_id].win_number=0;
-        users[r->user_id].lose_number=0;
-        users[r->user_id].extra_data=new UserExtraData();
+        strcpy(user_data->display_name,dname);
+        user_data->coin=50;
+        user_data->win_number=0;
+        user_data->lose_number=0;
+        user_data->extra_data=new UserExtraData();
         max_user_id=r->user_id+1;
+        users[user_data->id]=user_data;
     }
     return r;
 }

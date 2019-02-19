@@ -447,11 +447,9 @@ void MainServer::top_hundred_request(UserPort *s, TopHundredRequest *msg){
 }
 
 void MainServer::update_user_db(USER_ID user_id ){
-    SaveUserData  *lj=(SaveUserData*)db_jobs->reserve_new();
-    if(lj!=nullptr){
-        lj->init(user_id,this);
-        db_jobs->complte_last_reserved();
-    }
+    std::shared_ptr<SaveUserData>  lj=std::make_shared<SaveUserData>();
+    lj->init(user_id,this);
+    db_jobs.push(lj);
 }
 
 void MainServer::room_msg(UserPort *s, RoomMsg *mr){
@@ -459,11 +457,10 @@ void MainServer::room_msg(UserPort *s, RoomMsg *mr){
 }
 void MainServer::first_udp_ping(UserPort *u){
     check_user_in_room(u,u);
-    LoadExtraData  *lj=(LoadExtraData*)db_jobs->reserve_new();
-    if(lj!=nullptr){
-        lj->init(u->user_data->id,this);
-        db_jobs->complte_last_reserved();
-    }
+    std::shared_ptr<LoadExtraData>  lj=std::make_shared<LoadExtraData>();
+    lj->init(u->user_data->id,this);
+    db_jobs.push(lj);
+
 
 }
 
@@ -499,12 +496,12 @@ void MainServer::change_dispaly_name(UserPort *s,ChangeNameRequest *mr){
     s->user_data->name_changed+=1;
     //ip_db_msg_count[this->sender_endpoint_.address()]++;
     strcpy(s->user_data->display_name,mr->display_name);
-    ChangeNameJob  *lj=(ChangeNameJob*)db_jobs->reserve_new();
+    std::shared_ptr<ChangeNameJob>  lj=std::make_shared<ChangeNameJob>();
 
-    if(lj!=nullptr){
-        lj->init(s,this);
-        db_jobs->complte_last_reserved();
-    }
+
+    lj->init(s,this);
+    db_jobs.push(lj);
+
 
 
 }
@@ -596,9 +593,9 @@ void MainServer::recive_msg(UserPort *s, BaseMessage *_msg,size_t byte_recive){
 }
 void MainServer::change_user_data(USER_ID user_id){
 
-    SaveUserData *lj=(SaveUserData*)db_jobs->reserve_new();
+    std::shared_ptr<SaveUserData> lj=std::make_shared<SaveUserData>();
     lj->init(user_id,this);
-    db_jobs->complte_last_reserved();
+    db_jobs.push(lj);
 
     update_client_profile(user_id);
 }

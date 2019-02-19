@@ -109,7 +109,7 @@ struct SortedList{
 struct Room;
 class DBAccess
 {
-    UserData *users;
+    map<long long,std::shared_ptr<UserData>> users;
     int max_user_id=0;
     BaseServer *server;
     std::string EXAMPLE_USER ="root";

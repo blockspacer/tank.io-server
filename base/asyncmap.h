@@ -117,8 +117,8 @@ struct AsyncQueue{
     void clear(){
         reserv_head=completed_head=tail=0;
     }
-
-    T *reserve_new(){
+    template<class T2>
+    T2 *reserve_new(){
 
         if(reserved_number()+3>_size){
             //cerr<<"buffer out of size"<<endl;
@@ -131,7 +131,7 @@ struct AsyncQueue{
 
         reserv_head%=_size;
 
-        return array+tmp;
+        return (T2*)(array+tmp);
     }
     void complte_last_reserved(){
         if(uncomplted_reserved_size()<=0)
