@@ -21,8 +21,6 @@ add_definitions(-DSERVER_SIDE)
 
 include_directories(
         Classes
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../Classes/ImportantCommon/MathShapeUtils
-        ${CMAKE_CURRENT_LIST_DIR}/../../Classes/
 )
 
 file(GLOB helloworld_SRCS1
