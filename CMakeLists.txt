@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
-add_compile_options(-std=c++0x)
+add_compile_options(-std=c++11)
 project(tank-io.server)
 
 # Find includes in corresponding build directories
