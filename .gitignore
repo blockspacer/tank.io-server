@@ -21,7 +21,7 @@ init.sh
 r.sh
 run.sh
 run_single.sh
-tank-io.server
 tank.io-server.pro
+tank.io-server2.pro
 tank.io-server.pro.user
 udp-c-server.cpp
