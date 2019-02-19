@@ -1,6 +1,6 @@
 #ifndef COCOBASE_H
 #define COCOBASE_H
-#include "math.h"
+#include <cmath>
 
 
 
