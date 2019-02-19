@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0)
-
-project(tank-io.server2)
+add_compile_options(-std=c++11)
+project(tank-io.server)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -61,7 +61,7 @@ set(helloworld_SRCS
 add_executable(tank-io.server ${helloworld_SRCS})
 # Use the Widgets module from Qt 5
 #target_link_libraries(helloworld Qt5::Widgets)
-target_link_libraries(tank-io.server rt boost_thread boost_system pthread pthread)
+target_link_libraries(tank-io.server rt boost_thread boost_system pthread)
 target_link_libraries(tank-io.server Qt5::Core  Qt5::Sql)
 
 #LIBS +=  -lboost_thread -lboost_system   -lrt
