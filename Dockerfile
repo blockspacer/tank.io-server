@@ -42,9 +42,9 @@ RUN pwd
 RUN ls
 
 RUN ls
-RUN git clone https://github.com/fatholah/tank.io-server.git
 
 
+COPY tank.io-server ./tank.io-server
 
 #COPY Tank.io/Server/tank-io ./Tank.io/Server/tank-io
 #COPY Tank.io/Classes ./Tank.io/Classes
