@@ -287,7 +287,7 @@ void MainServer::match_request(UserPort *s,JoinRequest *mr){
         return ;
     auto &lrooms=rooms_lig[mr->lig_id];
     Room *room=nullptr;
-    for(OBJ_ID roomId : lrooms){
+    if(true)for(OBJ_ID roomId : lrooms){
         if(rooms.find(roomId)!=rooms.end() && rooms[roomId]!=nullptr)
             room=rooms[roomId].get();
     }

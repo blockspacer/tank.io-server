@@ -526,7 +526,7 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
         s->udp_end_point_set(sender_endpoint_);
         if(s->client_process_id!=msg->client_process_id){
             s->client_process_id=msg->client_process_id;
-            s->incom_events.clear();
+            //s->incom_events.clear();
         }
         SharedUdpEndPointMemory::update_time(s->user_data->id,total_time);
 

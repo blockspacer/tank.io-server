@@ -241,7 +241,7 @@ struct UserPort//: public std::enable_shared_from_this<UserPort>
   MSG_ID last_msg_id=0;
   OBJ_ID last_got_event=0;
   //vector<MSG_ID> income_msgs;
-  set<OBJ_ID> incom_events;
+  //set<OBJ_ID> incom_events;
   vector<MsgHeader*> events;
   MSG_ID msg_ids[16];
   BaseRoom *on_room=nullptr;

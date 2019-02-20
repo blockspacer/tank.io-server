@@ -79,16 +79,15 @@ void ServerViewHandler::init_client(UserPort *up,int last_got_event_id){
 
 
     vector<int> for_remove;
-    if(up->incom_events.size() && *(up->incom_events.begin())<last_got_event_id){
-        up->incom_events.erase(up->incom_events.begin());
-    }
+
     for(auto t=events.lower_bound(last_got_event_id); t!=events.end(); ++t)if(t->second!=nullptr){
         if(game_core->get_object(t->second->target_object_id)==nullptr){//TODO crash kard t->second ajib bud
             for_remove.push_back(t->second->target_object_id);
             continue;
         }
+        auto &set=ackSendedEvent[t->second->id];
 
-        if(up->incom_events.find(t->second->id)!=up->incom_events.end())
+        if(set.find(up->client_process_id)!=set.end())
             continue;
 
         send_to_user(up,t->second);
@@ -116,7 +115,10 @@ void Room::update_clients(){
     }
 }
 void Room::event_ack(UserPort *up,OBJ_ID event_id){
-    up->incom_events.insert(event_id);
+    //up->incom_events.insert(event_id);
+    if(handler->events.find(event_id)!=handler->events.end()){
+      handler->ackSendedEvent[event_id].insert(up->client_process_id)  ;
+    }
 }
 
 bool Room::update(){
@@ -216,6 +218,8 @@ void Room::get_msg(UserPort *up,GameActionMsg *mr){
            inp_State->tank_id = player->tank->id;
 
            tank_state->size_of_data=sizeof(GameActionMsg)+inp_State->size_of_data;
+           cerr<<"send ack of action"<<endl;
+           tank_state->id=0;
 
            server->udp_send(up,tank_state,tank_state->size_of_data);/**/
 

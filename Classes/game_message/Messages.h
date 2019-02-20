@@ -378,11 +378,11 @@ PAK_STRUCT DirectMsg:public RoomMsg{
 
 
 PAK_STRUCT RoomStateRequest:public RoomMsg{
-    int last_got_event;
+    OBJ_ID last_got_event;
     RoomStateRequest():RoomMsg(Type::ROOM_STATE_REQUST){}
 };
 PAK_STRUCT RoomEventAck:public RoomMsg{
-    int event_id;
+    OBJ_ID event_id;
     RoomEventAck():RoomMsg(Type::ROOM_EVENT_ACK){}
 };
 

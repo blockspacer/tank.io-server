@@ -36,8 +36,9 @@ struct ServerViewHandler:public ViewHandler{
         return ++id_g;
     }
 
-    map<int,BoardObjectEvent*> events;
-    map<int,int> object_2_event;
+    map<OBJ_ID,BoardObjectEvent*> events;
+    map<OBJ_ID,set<OBJ_ID> > ackSendedEvent;
+    map<OBJ_ID,OBJ_ID> object_2_event;
     //BoardObjectEvent* last_event=nullptr;
     vector<BoardObjectEvent*> last_step_events;
 

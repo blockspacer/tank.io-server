@@ -6,7 +6,7 @@
 
 GameCore::GameCore()
 {
-
+ CCLOG("GameCore::GameCore");
 
 }
 void GameCore::add_player_with_tank(long long user_id){
@@ -15,9 +15,10 @@ void GameCore::add_player_with_tank(long long user_id){
         players[user_id]=p=new Player();
         p->user_id=user_id;
     }
-    CCLOG("add_tank");
+    CCLOG("add_player_with_tank call");
     if(p->tank!=nullptr)
         return ;
+
     Tank *tank=create_tank();
 
     tank->user_id=user_id;
@@ -125,6 +126,7 @@ void GameCore::init_shot(Misle *misle){
 
 
 Tank *GameCore::create_tank(){
+    CCLOG("create tank");
     Tank *t=new Tank(this);
     t->id=generate_shot_id();
     return t;

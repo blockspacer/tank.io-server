@@ -228,6 +228,7 @@ Misle *Tank::shot(OBJ_ID shot_id){
     return t;
 }
 Tank::InputFarman* Tank::add_action(STEP_VALUE action_time,float f,int client_id){
+     CCLOG("shot_action %d \n",client_id);
     auto p=new InputFarman();
     Input::ptr i=Input::ptr(p);
     p->trigger_step=action_time;
@@ -285,7 +286,7 @@ void Tank::InputShot::set_data(const Input::State *data){
 }
 
 Tank::InputShot* Tank::add_shot_action(STEP_VALUE action_time,int client_id){
-    CCLOG("shot_action %d \n",client_id);
+    CCLOG("add_shot_action %d \n",client_id);
     auto p=new InputShot();
     Input::ptr i=Input::ptr(p);
     p->trigger_step=action_time;
