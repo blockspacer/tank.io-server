@@ -124,7 +124,7 @@ void Room::event_ack(UserPort *up,OBJ_ID event_id){
 bool Room::update(){
     if(room_is_close)
         return false;
-    if(last_action+60*10<game_core->total_time)
+    if(last_action+60*1000<game_core->total_time)
         return false;
     int i=0;
     while(game_core->get_step_with_time(server->total_time)>game_core->total_time){

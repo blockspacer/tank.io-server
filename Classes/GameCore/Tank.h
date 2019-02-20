@@ -92,15 +92,15 @@ struct Tank:public Unit{
         int client_id;
         STEP_VALUE trigger_step;
         PAK_STRUCT State{
-            size_t size_of_data;
+            unsigned int size_of_data;
             enum Type{
                 MOVMENT=1,
                 SHOT=2,
             }type;
             OBJ_ID tank_id;
             STEP_VALUE trigger_step;
-            int id;
-            int client_id;
+            unsigned int id;
+            unsigned int client_id;
             bool check(){
                 return true;
             }

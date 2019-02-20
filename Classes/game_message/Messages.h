@@ -244,9 +244,9 @@ PAK_STRUCT RoomMsg:public MsgHeader{
 
 PAK_STRUCT GameActionMsg:public RoomMsg{
 
-    size_t size_of_data;
-    size_t start_states=sizeof(GameActionMsg);
-    size_t number_of_states;
+    unsigned int size_of_data;
+    unsigned int start_states=sizeof(GameActionMsg);
+    unsigned int number_of_states;
     GameActionMsg():RoomMsg(Type::GAMEACTION_CLIENT_SEND){}
 
 
@@ -257,6 +257,8 @@ PAK_STRUCT GameActionMsg:public RoomMsg{
         if(start_states!=sizeof(GameActionMsg))
             return false;
         if(number_of_states>1)
+            return false;
+        if(size_of_data!=n)
             return false;
         return RoomMsg::check();
     }
@@ -272,9 +274,9 @@ PAK_STRUCT GameActionMsg:public RoomMsg{
 
 
 PAK_STRUCT TankState16Msg:public RoomMsg{
-    size_t size_of_data;
-    size_t start_states=sizeof(TankState16Msg);
-    size_t number_of_states;
+    unsigned int size_of_data;
+    unsigned int start_states=sizeof(TankState16Msg);
+    unsigned int number_of_states;
 
     TankState16Msg():RoomMsg(Type::TANK_STATE_16){}
 };
