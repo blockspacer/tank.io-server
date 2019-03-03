@@ -53,7 +53,7 @@ void DBAccess::connect(){
     EXAMPLE_HOST="192.168.1.3";
     EXAMPLE_HOST="localhost";
     std::string EXAMPLE_USER ="super_goal";
-    std::string EXAMPLE_PASS ="amarokgames33";
+    std::string EXAMPLE_PASS ="amarokgames33---";
     std::ifstream fin("/var/game_server/db.config");
     {
         fin>>EXAMPLE_USER;

@@ -6,8 +6,8 @@ typedef long long USER_ID;
 typedef long long OBJ_ID;
 typedef long long TIME_VALUE;
 typedef int STEP_VALUE;
-//#define PAK_STRUCT  struct __attribute__ ((packed))
-#define PAK_STRUCT  struct
+#define PAK_STRUCT  struct __attribute__ ((packed))
+//#define PAK_STRUCT  struct
 struct BoardObject;
 struct GameCore;
 
