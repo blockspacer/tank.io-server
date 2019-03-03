@@ -342,14 +342,17 @@ void BaseServer::run_io(){
     boost::thread_group threads;
 
 
-    //threads.create_thread(boost::bind(&BaseServer::db_dun,
-    //    this));
+    /*threads.create_thread(boost::bind(&BaseServer::db_dun,
+        this));
+    threads.create_thread(boost::bind(&BaseServer::run,
+        this));/**/
     auto t=std::thread([this](){
        this->db_dun();
     });
     auto t2=std::thread([this](){
        this->run();
-    });
+    });/**/
+
 
     auto const address = boost::asio::ip::make_address("0.0.0.0");// boost::asio::ip::make_address(argv[1]);
     auto const threads_n = 2;//std::max<int>(1, std::atoi(argv[3]));
@@ -357,6 +360,8 @@ void BaseServer::run_io(){
 
 
     io_service.run();
+    threads.join_all();
+
 }
 namespace std {
 
@@ -393,7 +398,6 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
         system_clock::now().time_since_epoch()
     ).count();
     int t=getpid();
-
     if (ec || bytes_recvd <= 0)
         return;
     {
@@ -404,7 +408,7 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
         SharedLogParametr::last_user_id=msg->user_id;
         if(msg->base_type==BaseMessage::BaseType::MSG)
             SharedLogParametr::last_msg_type=static_cast<MsgHeader*>(msg)->type;
-        LINELOG;
+        //LINELOG;
 
 
         if(msg->base_type==BaseMessage::BaseType::PINGR_EQUEST){
@@ -792,8 +796,7 @@ void BaseServer::set_buy_item_used(int db_id){
 }/**/
 void BaseServer::udp_send(udp::endpoint &udp_end_point,BaseMessage *data_,std::size_t length)
 {
-
-    //boost::unique_lock<boost::shared_mutex> queueLock(udp_mutex);
+   //boost::unique_lock<boost::shared_mutex> queueLock(udp_mutex);
     try{
   socket_.async_send_to(
       boost::asio::buffer((char*)data_, length), udp_end_point,
@@ -876,11 +879,11 @@ void BaseServer::do_receive()
         try
           {
 
-            //cerr<<"start "<< this->sender_endpoint_<<endl;
+
 
 
             this->udp_recive(ec,this->sender_endpoint_,bytes_recvd);
-            //cerr<<sender_endpoint_<< this->sender_endpoint_<<endl;
+
 
             //myexception tt;
             //throw tt;

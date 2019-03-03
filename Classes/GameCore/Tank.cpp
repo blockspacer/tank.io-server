@@ -91,8 +91,16 @@ void Unit::get_data(BoardObjectState *s)const{
     cs->target_angle=target_angle;
     cs->user_id=user_id;
     cs->angle_speed=angle_speed;
-    s->size_of_data=sizeof(UnitState);
 }
+MyDataBlock Unit::get_data()const{
+    auto data=new UnitState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(UnitState);
+    return res;
+}
+
 
 void Unit::set_data(const BoardObjectState *state){
     if(last_update_from_server_time>state->room_time)
@@ -149,6 +157,8 @@ void Tank::update_inputs(){
         if(i->second->trigger_step==my_step){
             i->second->run_on_this(this);
             core->view_handler->triger_change(id);
+            if(core->server)
+                last_event_time=core->total_time;
         }
         //cinps.erase(i->second->client_id);
         inps.erase(i);
@@ -320,10 +330,17 @@ void Tank::get_data(BoardObjectState *s)const{
     Unit::get_data(s);
     s->object_type=BoardObjectState::ObjectType::TANK;
     auto cs=static_cast<TankState*>(s);
-    s->size_of_data=sizeof(TankState);
+
 
 }
-
+MyDataBlock Tank::get_data()const{
+    auto data=new TankState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(TankState);
+    return res;
+}
 void Tank::set_data(const BoardObjectState *state){
     if(last_update_from_server_time>state->room_time)
         return;
@@ -338,7 +355,14 @@ void Tank::set_data(const BoardObjectState *state){
 void CircleBlock::get_data(BoardObjectState *s)const{
     BoardObject::get_data(s);
     s->object_type=BoardObjectState::ObjectType::CircleBlock;
-    s->size_of_data=sizeof(CircleBlockState);
+}
+MyDataBlock CircleBlock::get_data()const{
+    auto data=new CircleBlockState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(CircleBlockState);
+    return res;
 }
 
 void CircleBlock::set_data(const BoardObjectState *state){

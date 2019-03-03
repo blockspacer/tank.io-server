@@ -10,7 +10,14 @@ void Misle::get_data(BoardObjectState *s)const{
     LiveBoardObject::get_data(s);
     s->object_type=BoardObjectState::ObjectType::MISLE;
     s->owner_id=owner_id;
-    s->size_of_data=sizeof(MisleState);
+}
+MyDataBlock Misle::get_data()const{
+    auto data=new LiveBoardObjectState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(LiveBoardObjectState);
+    return res;
 }
 void Misle::set_data(const BoardObjectState *state){
     if(last_update_from_server_time>state->room_time)

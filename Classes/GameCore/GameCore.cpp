@@ -72,6 +72,23 @@ void GameCore::init(){
             c->pos=Point(0,2000);
             init_block(c);
         }
+        for(int i=0; i<0;++i){
+            Point s(rand()%21-10,rand()%21-10);
+            s*=400;
+            Point v={0,0};
+            if(rand()%2)
+                v.x+=1;
+            else
+                v.y+=1;
+            v*=1200;
+            PlatformLine *p=create_platform_line(s,s+v);
+            init_platform_line(p);
+
+            CircleBlock *c=create_block();
+            c->r=0;
+            c->pos=Point(0,2000);
+            init_block(c);
+        }
         if(true){
                         CircleBlock *c=create_block();
                         c->r=200;
@@ -144,7 +161,7 @@ Player *GameCore::get_player(USER_ID id){
 
 }
 
-BoardObject *GameCore::get_object(int id){
+BoardObject *GameCore::get_object(OBJ_ID id){
     if(all_objects.find(id)==all_objects.end())
         return nullptr;
     return all_objects[id];

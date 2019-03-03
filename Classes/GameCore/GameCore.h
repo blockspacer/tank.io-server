@@ -60,9 +60,10 @@ class GameCore
 
 
     map<int,Misle* > shots;
-    map<int,BoardObject *> all_objects;
+
 
 public:
+    map<int,BoardObject *> all_objects;
     ~GameCore(){
         CCLOG("~GameCore");
     }
@@ -149,7 +150,7 @@ public:
     GameConf get_conf();
     Tank* get_tank(int id);
     Player* get_player(USER_ID id);
-    BoardObject *get_object(int id);
+    BoardObject *get_object(OBJ_ID id);
 
 
 };

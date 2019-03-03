@@ -8,8 +8,14 @@ void PlatformLine::get_data(BoardObjectState *s)const{
     auto cstate=static_cast<PlatformLineState*>(s);
     cstate->start=ZIP_Point::fcreate(start);
     cstate->finish=ZIP_Point::fcreate(finish);
-    s->size_of_data=sizeof (PlatformLineState);
-
+}
+MyDataBlock PlatformLine::get_data()const{
+    auto data=new PlatformLineState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(PlatformLineState);
+    return res;
 }
 
 void PlatformLine::set_data(const BoardObjectState *state){

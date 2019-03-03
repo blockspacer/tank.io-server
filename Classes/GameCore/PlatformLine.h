@@ -23,6 +23,7 @@ public:
     void refresh();
 
     void get_data(BoardObjectState *s)const;
+    MyDataBlock get_data()const;
     virtual void set_data(const BoardObjectState *state);
 
 };

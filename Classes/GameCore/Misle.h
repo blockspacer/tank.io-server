@@ -20,7 +20,8 @@ struct Misle:public LiveBoardObject{
 
     void update();
     void clear_collision();
-    void get_data(BoardObjectState *s)const;
+    void get_data(BoardObjectState *s)const override;
+    virtual MyDataBlock get_data()const override;
     virtual void set_data(const BoardObjectState *state);
 
 };

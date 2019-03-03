@@ -31,16 +31,16 @@ struct ServerViewShadow:public ViewShadow{
     virtual void on_ded();
 };
 struct ServerViewHandler:public ViewHandler{
-    int id_g=0;
+    /*int id_g=0;
     int generate_event_id(){
         return ++id_g;
-    }
+    }/**/
 
-    map<OBJ_ID,BoardObjectEvent*> events;
-    map<OBJ_ID,set<OBJ_ID> > ackSendedEvent;
-    map<OBJ_ID,OBJ_ID> object_2_event;
+    map<OBJ_ID,STEP_VALUE> time_og_last_change;
+    map<OBJ_ID,map<OBJ_ID,STEP_VALUE> > ackSendedEvent;
+    //map<OBJ_ID,OBJ_ID> object_2_event;
     //BoardObjectEvent* last_event=nullptr;
-    vector<BoardObjectEvent*> last_step_events;
+    vector<OBJ_ID> last_step_events;
 
     struct Room *room;
 
@@ -52,7 +52,7 @@ struct ServerViewHandler:public ViewHandler{
     void handle_tank(Tank *tank);
     void handle_block(CircleBlock *block);
     void handle_block(PlatformLine *block);
-    void get_array(BoardObjectEvent*e,TankState16Msg *stats);
+    void get_array(vector<MyDataBlock> &forSend,TankState16Msg *stats);
     void send_to_user(struct UserPort *up, BoardObjectEvent*);
     void send_to_users(BoardObjectEvent*);
     void triger_change(int object_id);
@@ -64,7 +64,7 @@ struct Room:public BaseRoom{
     boost::shared_mutex mutex;
     shared_ptr<GameCore> game_core;
     long last_action=0;
-    ServerViewHandler *handler;
+    ServerViewHandler *handler=nullptr;
     struct RoomData{
         ROOM_DATA data;
         int lig_id;
@@ -111,7 +111,7 @@ struct Room:public BaseRoom{
 
     void update_client(struct UserPort *up,int last_got_event_id);
     void update_clients();
-    void event_ack(UserPort *user_id,OBJ_ID event_id);
+    void event_ack(UserPort *user_id,OBJ_ID event_id,STEP_VALUE t);
 
 
     void get_msg(UserPort *up,GameActionMsg *msg);

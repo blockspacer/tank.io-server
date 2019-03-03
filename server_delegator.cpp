@@ -178,6 +178,7 @@ void foo(int n) {
         foo(n+1);
 
 }
+#include "GameCore/BoardObject.h"
 int main(int argc, char* argv[])
 {
     cerr<<BOOST_LIB_VERSION<<endl;
@@ -209,7 +210,11 @@ int main(int argc, char* argv[])
 
     MainServer s(io_service, 3100);
 
-    s.reload_rooms();
+
+
+
+
+    //s.reload_rooms();
     s.run_rooms();
 
 

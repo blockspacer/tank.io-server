@@ -55,8 +55,9 @@ struct Unit:public LiveBoardObject{
 
 
 
-    virtual void get_data(BoardObjectState *s)const;
-    virtual void set_data(const BoardObjectState *state);
+    virtual void get_data(BoardObjectState *s)const override;
+    virtual MyDataBlock get_data()const override;
+    virtual void set_data(const BoardObjectState *state)override;
 };
 
 
@@ -76,7 +77,7 @@ struct Tank:public Unit{
 
     void update_inputs();
     void update_angle();
-    void update();
+    void update()override;
 
     void set_target_angle(float t_angle);
 
@@ -85,6 +86,7 @@ struct Tank:public Unit{
 
 
     virtual void get_data(BoardObjectState *s)const;
+    virtual MyDataBlock get_data()const override;
     virtual void set_data(const BoardObjectState *state);
 
     struct Input{
@@ -168,7 +170,9 @@ PAK_STRUCT CircleBlockState:BoardObjectState{
 struct CircleBlock:public BoardObject{
     CircleBlock(GameCore *core):BoardObject(core){}
     void get_data(BoardObjectState *s)const override;
+    virtual MyDataBlock get_data()const override;
     virtual void set_data(const BoardObjectState *state)override;
+
 };
 
 

@@ -244,7 +244,7 @@ PAK_STRUCT RoomMsg:public MsgHeader{
 
 PAK_STRUCT GameActionMsg:public RoomMsg{
 
-    unsigned int size_of_data;
+
     unsigned int start_states=sizeof(GameActionMsg);
     unsigned int number_of_states;
     GameActionMsg():RoomMsg(Type::GAMEACTION_CLIENT_SEND){}
@@ -271,13 +271,46 @@ PAK_STRUCT GameActionMsg:public RoomMsg{
         return std::shared_ptr<Tank::Input::State>(res);
     }
 };
+template<class T>
+PAK_STRUCT MyArray{
+    SIZE start;
+    SIZE size;
+    void init(BaseMessage *thiz,SIZE x){
+        start=thiz->getEndData()-(char*)this;
+        size=x;
+        thiz->size_of_data+=x*sizeof(T);
+    }
+    T *getIndex(int i){
+        char *t=(char*)this;
+        t+=start;
+        T *tt=(T*)t;
+        return tt+i;
+    }
+    void *getPtr(){
+        return (unsigned char*)this+start;
+    }
+    T * getArray(){
+        return (T*)(getPtr());
+    }
+};
+PAK_STRUCT MyPointer{
+    SIZE start;
+    char *getPtr(){
+        return (char*)this+start;
+    }
+    void init(BaseMessage *thiz,SIZE size){
+        start=thiz->getEndData()-(char*)this;
+        thiz->size_of_data+=size;
+    }
+    template<class T>
+    T *getPtr(){
+        return (T*)(getPtr());
+    }
+};
 
 
 PAK_STRUCT TankState16Msg:public RoomMsg{
-    unsigned int size_of_data;
-    unsigned int start_states=sizeof(TankState16Msg);
-    unsigned int number_of_states;
-
+    MyArray<MyPointer> array;
     TankState16Msg():RoomMsg(Type::TANK_STATE_16){}
 };
 
@@ -384,7 +417,8 @@ PAK_STRUCT RoomStateRequest:public RoomMsg{
     RoomStateRequest():RoomMsg(Type::ROOM_STATE_REQUST){}
 };
 PAK_STRUCT RoomEventAck:public RoomMsg{
-    OBJ_ID event_id;
+    OBJ_ID obj_id;
+    STEP_VALUE step;
     RoomEventAck():RoomMsg(Type::ROOM_EVENT_ACK){}
 };
 

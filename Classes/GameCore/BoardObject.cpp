@@ -18,14 +18,15 @@ void BoardObject::get_data(BoardObjectState *state)const{
     state->object_id=id;
     state->pos=ZIP_Point::fcreate(pos.x,pos.y);
     state->z=z;
-
     //cout<<"angle "<<angle<<" "<<int(angle*1000)<<endl;
     state->angle=angle;
     state->room_time=core->total_time;
     state->r=r;
-    state->size_of_data=sizeof(BoardObjectState);
 
 
+}
+MyDataBlock BoardObject::get_data()const{
+    CCLOG("this faunction not be for call");
 }
 void BoardObject::set_data(const BoardObjectState *state){
     id=state->object_id;
@@ -48,8 +49,16 @@ void LiveBoardObject::get_data(BoardObjectState *state)const{
     cstate->speed=speed;
     cstate->healt=healt;
     cstate->max_healt=max_healt;
-    state->size_of_data=sizeof(LiveBoardObjectState);
 
+
+}
+MyDataBlock LiveBoardObject::get_data()const{
+    auto data=new LiveBoardObjectState();
+    MyDataBlock res;
+    get_data(data);
+    res.data = (char*)data;
+    res.size = sizeof(LiveBoardObjectState);
+    return res;
 }
 void LiveBoardObject::set_data(const BoardObjectState *state){
     BoardObject::set_data(state);

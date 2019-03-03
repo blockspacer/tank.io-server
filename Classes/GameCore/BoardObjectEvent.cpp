@@ -3,7 +3,7 @@
 #include "Tank.h"
 #include "Misle.h"
 #include "PlatformLine.h"
-void BoardObjectEvent::get_data(BoardObjectState *s){
+void BoardObjectEvent::get_data(BoardObjectState *s)const{
     //size=sizeof(*this);
     //memcpy(data,*this,size);
     //*(int*)data=1;
@@ -13,13 +13,18 @@ void BoardObjectEvent::get_data(BoardObjectState *s){
         return ;
     }
     s->event_type=BoardObjectState::ADD;
-    s->event_id=id;
+    //s->event_id=id;
     BoardObject *tank=game_core->get_object(target_object_id);
     tank->get_data(s);
 
 
 }
-void BoardObjectEvent::run_game_core(BoardObjectState *s){
+MyDataBlock BoardObjectEvent::get_data()const{
+    BoardObject *tank=game_core->get_object(target_object_id);
+    auto x= tank->get_data();
+}
+
+void BoardObjectEvent::run_game_core(const BoardObjectState *s){
     if(!game_core)
         return;
     target_object_id=s->object_id;
@@ -42,7 +47,7 @@ void BoardObjectEvent::run_game_core(BoardObjectState *s){
             }
 
         }else if(s->object_type==BoardObjectState::ObjectType::TANK){
-            auto cs=static_cast<TankState*>(s);
+            auto cs=static_cast<const TankState*>(s);
             auto *m=game_core->create_tank();
             m->set_data(s);
             game_core->init_tank(m);

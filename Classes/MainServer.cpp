@@ -245,7 +245,7 @@ void MainServer::update_room_client(Room *room,UserPort *up){
 
 void MainServer::run_rooms_step(){
     vector<OBJ_ID > forRemove;
-    for(auto room:rooms)if(room.second){
+    for(const std::pair<OBJ_ID , std::shared_ptr<Room> > &room:rooms)if(room.second){
         boost::unique_lock<boost::shared_mutex> lock_qurd(room.second->mutex);
         bool ph=room.second->update();
         room.second->update_clients();
@@ -259,16 +259,22 @@ void MainServer::run_rooms_step(){
 }
 void MainServer::run_rooms_while(){
     while(true){
+
         run_rooms_step();
-        int dt=4;
+        int dt=1000/25;
         boost::this_thread::sleep(boost::posix_time::milliseconds(dt));
     }
 }
 void MainServer::run_rooms(){
     boost::thread_group threads;
     std::thread *t2=new std::thread([this](){
+
        this->run_rooms_while();
     });
+    /*boost::thread t{[this](){
+            this->run_rooms_while();
+         }};
+    t.join();/**/
 }
 void MainServer::update_client(Room *room){
     for(auto t:room->users){
@@ -511,7 +517,7 @@ void MainServer::room_event_ack(UserPort *s, RoomEventAck *mr){
     Room *room=this->rooms[room_id].get();
     if(room==nullptr)
         return;
-    room->event_ack(s,mr->event_id);
+    room->event_ack(s,mr->obj_id,mr->step);
 
 }
 

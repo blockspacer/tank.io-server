@@ -11,7 +11,7 @@ typedef long long HASH_RESULT;
 typedef long long BASE_HASH;
 typedef long long ROOM_ACCESS_CODE;
 typedef long long TIME_VALUE;
-
+typedef  unsigned int SIZE;
 
 typedef char PASSWORD[32];
 typedef char CODE[32];
@@ -19,6 +19,7 @@ typedef char REGISTER_CODE[32];
 typedef char LOGIN_ERROR[32];
 typedef char DISPLAY_NAME[64];
 typedef char USE_DISCRIP[64];
+
 PAK_STRUCT BaseMessage{
     enum BaseType:unsigned int{
         ACK=1,
@@ -47,12 +48,17 @@ PAK_STRUCT BaseMessage{
     COOCKIE cookie;
     HASH_KEY rand_key;
     BASE_HASH hash;
+    SIZE size_of_data;
+    SIZE start_of_body;
     bool ack_required=true;
     BaseMessage(){}
     BaseMessage(BaseType _type):base_type(_type){}
     BaseMessage(BaseType _type,MSG_ID _id):base_type(_type),id(_id){}
     inline bool check(){
         return true;
+    }
+    char * getEndData(){
+        return (char*)this+size_of_data;
     }
 };
 PAK_STRUCT ACKMSG:public BaseMessage{

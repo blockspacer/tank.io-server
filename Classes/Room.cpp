@@ -28,35 +28,37 @@ void ServerViewHandler::handle_block(PlatformLine *block){
 
 }
 void ServerViewHandler::triger_change(int obj_id){
-    auto last=object_2_event[obj_id];
-    if(last>0){
-        events.erase(last);
+    time_og_last_change[obj_id]=game_core->total_time;
+    last_step_events.push_back(obj_id);
+
+}
+void ServerViewHandler::get_array(vector<MyDataBlock> &forSend,TankState16Msg *tank_state){
+
+    tank_state->size_of_data=sizeof(TankState16Msg);
+    size_t n=forSend.size();
+    if(n>16)
+        n=16;
+    tank_state->array.init(tank_state,n);
+    for(size_t i=0; i<n; ++i){
+        auto &t=forSend[i];
+        //MyPointer p;
+        MyPointer *pp=tank_state->array.getIndex(i);
+        pp->init(tank_state,t.size);
+        memcpy(pp->getPtr(),(void*)t.data,t.size);
+        cerr<<pp->getPtr<BoardObjectState>()->object_id<<endl;
+        cerr<<pp->getPtr<BoardObjectState>()->room_time<<endl;
     }
-    BoardObjectEvent *e=new BoardObjectEvent();
-    object_2_event[obj_id] = e->id = generate_event_id();
-    e->game_core = this->game_core;
-    e->target_object_id = obj_id;
-    events[e->id]=e;
-    last_step_events.push_back(e);
 
 }
-void ServerViewHandler::get_array(BoardObjectEvent*e,TankState16Msg *tank_state){
-    int size=sizeof(TankState16Msg);
-    tank_state->number_of_states=1;
 
-    char *data=(char*)tank_state;
-    data+=tank_state->start_states;
-
-
-    BoardObjectState *state=(BoardObjectState*)data;
-    e->get_data(state);
-    size+=state->size_of_data;
-    tank_state->size_of_data=size;
-}
 void ServerViewHandler::send_to_user(UserPort *up, BoardObjectEvent* e){
     char _data[256];
     TankState16Msg *tank_state=new(_data) TankState16Msg();
-    get_array(e,tank_state);
+
+    vector<MyDataBlock> forSend;
+    MyDataBlock res=e->get_data();
+    forSend.push_back(res);
+    get_array(forSend,tank_state);
 
     room->server->udp_send(up,tank_state,tank_state->size_of_data);
 
@@ -65,7 +67,10 @@ void ServerViewHandler::send_to_users(BoardObjectEvent *e){
 
     char _data[256];
     TankState16Msg *tank_state=new(_data) TankState16Msg();
-    get_array(e,tank_state);
+    vector<MyDataBlock> forSend;
+    MyDataBlock res=e->get_data();
+    forSend.push_back(res);
+    get_array(forSend,tank_state);
 
     for(auto t:room->users){
          UserPort *up=t.second;
@@ -78,24 +83,51 @@ void ServerViewHandler::init_client(UserPort *up,int last_got_event_id){
 
 
 
-    vector<int> for_remove;
+    vector<OBJ_ID> for_remove;
+    vector<MyDataBlock> forSend;
 
-    for(auto t=events.lower_bound(last_got_event_id); t!=events.end(); ++t)if(t->second!=nullptr){
-        if(game_core->get_object(t->second->target_object_id)==nullptr){//TODO crash kard t->second ajib bud
-            for_remove.push_back(t->second->target_object_id);
+    auto &set=ackSendedEvent[up->client_process_id];
+    for(auto t : game_core->all_objects){
+        auto obj=game_core->get_object(t.first);
+        if(obj==nullptr || obj->for_remove)
             continue;
+
+
+
+        if(set.find(t.first)!=set.end() && set[t.first] >= obj->last_event_time)
+            continue;
+
+
+
+        MyDataBlock res=game_core->get_object(t.first)->get_data();
+        if(res.size>100){
+            cerr<<"res.size>100"<<endl;
         }
-        auto &set=ackSendedEvent[t->second->id];
-
-        if(set.find(up->client_process_id)!=set.end())
-            continue;
-
-        send_to_user(up,t->second);
+        forSend.push_back(res);
 
     }
     for(auto t:for_remove){
-        events.erase(t);
+        time_og_last_change.erase(t);
     }
+    try{
+        if(forSend.size()<1)
+            return ;
+        cerr<<"new tank state "<<forSend.size()<<endl;
+        char *_data=new char[4*1024];
+        TankState16Msg *tank_state=new(_data) TankState16Msg();
+        get_array(forSend,tank_state);
+        cerr<<tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time<<endl;
+        cerr<<"fff "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+
+        room->server->udp_send(up,tank_state,tank_state->size_of_data);
+
+        cerr<<&(tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time)-(int*)tank_state<<endl;
+        cerr<<"fff2 "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+    }catch(std::exception& e){
+        cerr<<"exception "<<e.what()<<endl;
+    }
+
+
 }
 void Room::update_client(UserPort *up,int lsat_got_event){
 
@@ -106,18 +138,19 @@ void Room::update_client(UserPort *up,int lsat_got_event){
 
 void Room::update_clients(){
 
-    for(auto e : handler->last_step_events)
-        handler->send_to_users(e);
-    handler->last_step_events.clear();
+    //for(auto e : handler->last_step_events)
+    //    handler->send_to_users(e);
+    //handler->last_step_events.clear();
 
     for(auto user:users){
         update_client(user.second,user.second->last_got_event);
     }
 }
-void Room::event_ack(UserPort *up,OBJ_ID event_id){
+void Room::event_ack(UserPort *up,OBJ_ID event_id,STEP_VALUE step){
     //up->incom_events.insert(event_id);
-    if(handler->events.find(event_id)!=handler->events.end()){
-      handler->ackSendedEvent[event_id].insert(up->client_process_id)  ;
+    if(handler->time_og_last_change.find(event_id)!=handler->time_og_last_change.end()){
+      if(handler->ackSendedEvent[up->client_process_id][event_id]<step)
+          handler->ackSendedEvent[up->client_process_id][event_id]=step;
     }
 }
 
