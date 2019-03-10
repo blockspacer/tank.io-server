@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include "game_message/Messages.h"
 #include "base_message/BaseMessage.h"
-
+#include "base_message/metamessages.h"
 //#include <qt5/QtSql/QSqlDatabase>
 
 
@@ -121,7 +121,7 @@ public:
     void connect();
     UserData *login(USER_ID user_id,PASSWORD pass);
     int fake_register_id=0;
-    RegisterResponse *register_user(const REGISTER_CODE code,std::string);
+    RegisterResponse *register_user(const string code,std::string);
     bool change_display_name(UserData *ud);
     bool save_user_data(USER_ID user_id);
     void change_score(USER_ID);

@@ -546,7 +546,7 @@ UserData *DBAccess::login(USER_ID user_id,PASSWORD pass){
     return false;/**/
 }
 
-RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string ip){
+RegisterResponse *DBAccess::register_user(const string code,std::string ip){
     cerr<<"DBAccess::register_user "<<code<<endl;
     auto rand_pass =server->get_random_long_long();
     char pass_c[32];
@@ -563,7 +563,7 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
                   ":password,"
                   ":display_name,"
                   ":coin)");
-    query.bindValue(":code", code);
+    query.bindValue(":code", code.c_str());
     query.bindValue(":password", pass);
     query.bindValue(":coin", 400);
     query.bindValue(":level", 1);
@@ -576,12 +576,12 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
     RegisterResponse *r=new RegisterResponse();
     if(query.exec()){
         r->done=true;
-        r->user_id=query.lastInsertId().toInt();
-        cerr<<"insert to user with id"<<r->user_id<<endl;
+        r->userId=query.lastInsertId().toInt();
+        cerr<<"insert to user with id"<<r->userId<<endl;
     }else{
         r->done=false;
         cerr<<"error0:"<<query.lastError().text().toStdString()<<endl;
-        r->user_id=users.size()+1;
+        r->userId=users.size()+1;
         r->done=true;
         //return r;
         //r->done=true;
@@ -589,15 +589,15 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
     }
 
 
-    strcpy(r->pass,pass.toStdString().c_str());
+    r->pass=pass.toStdString();
     if(r->done)
-        cerr<<"user created with id "<<r->user_id<<endl;
+        cerr<<"user created with id "<<r->userId<<endl;
     else
         cerr<<"can not create"<<endl;
     if(r->done){
         auto user_data=std::make_shared<UserData>();
-        user_data->id=r->user_id;
-        strcpy(user_data->pass,r->pass);
+        user_data->id=r->userId;
+        strcpy(user_data->pass,r->pass.c_str());
         char dname[256];
         sprintf(dname,"مهمان %d",max_user_id);
         strcpy(user_data->display_name,dname);
@@ -605,7 +605,7 @@ RegisterResponse *DBAccess::register_user(const REGISTER_CODE code,std::string i
         user_data->win_number=0;
         user_data->lose_number=0;
         user_data->extra_data=new UserExtraData();
-        max_user_id=r->user_id+1;
+        max_user_id=r->userId+1;
         users[user_data->id]=user_data;
     }
     return r;
