@@ -34,6 +34,7 @@ file(GLOB helloworld_SRCS1
      "${CMAKE_CURRENT_LIST_DIR}/Classes/game_message/*.cpp"
      "${CMAKE_CURRENT_LIST_DIR}/Classes/*.cpp"
      "${CMAKE_CURRENT_SOURCE_DIR}/Classes/MathShapeUtils/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/http/*.cpp"
 
 )
 file(GLOB helloworld_HEAD1
@@ -46,6 +47,8 @@ file(GLOB helloworld_HEAD1
      "${CMAKE_CURRENT_LIST_DIR}/cocos2d_server/*.h"
      "${CMAKE_CURRENT_LIST_DIR}/Classes/game_message/*.h"
      "${CMAKE_CURRENT_LIST_DIR}/Classes/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/http/*.h"
+     "${CMAKE_CURRENT_LIST_DIR}/http/*.hpp"
 
 )
 
@@ -61,7 +64,7 @@ set(helloworld_SRCS
 add_executable(tank-io.server ${helloworld_SRCS})
 # Use the Widgets module from Qt 5
 #target_link_libraries(helloworld Qt5::Widgets)
-target_link_libraries(tank-io.server rt boost_thread boost_system pthread)
+target_link_libraries(tank-io.server rt boost_thread boost_system  pthread)
 target_link_libraries(tank-io.server Qt5::Core  Qt5::Sql)
 
 #LIBS +=  -lboost_thread -lboost_system   -lrt
