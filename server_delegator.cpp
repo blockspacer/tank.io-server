@@ -32,7 +32,10 @@
 #include <map>
 #include "Engine/SharedMemoryLoger.h"
 #include "base/rbtree.h"
-
+#include "http/server.hpp"
+#include "http/request.hpp"
+#include "http/reply.hpp"
+#include "http/connection.hpp"
 //include for debuge trace
 //http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
 #include <stdio.h>
@@ -202,15 +205,72 @@ int main(int argc, char* argv[])
            i->second.func<<" "<<i->second.line<<endl;
     }
     //SharedRoomMemory::clear();
-  try
-  {
-
 
     boost::asio::io_service io_service;
+    try
+    {
+      // Check command line arguments.
+
+      std::string address="0.0.0.0";
+      std::string port="8888";
+      std::string root="/salam";
+
+
+      // Initialise the server.
+      http::server::server s2(io_service,address,port, root);
+
+        s2.request_handler_.handlers["/unit-test/echo"]=[](const http::server::request& req){
+
+            http::server::reply r=http::server::reply::stock_json(req.json);
+            return r;
+        };
+
+
+
+
+      // Run the server until stopped.
+      //s.run();
+
+
+
+
 
     MainServer s(io_service, 3100);
 
+    s2.request_handler_.handlers2["/register"]=[s=&s](http::server::connection *con,const http::server::request& req){
 
+        //ip_db_msg_count[this->sender_endpoint_.address()]++;
+
+         RegisterRequest *r=new RegisterRequest();
+
+
+
+             if (true){
+
+
+
+
+                auto lj=std::make_shared<RegisterJob>(s);
+
+
+                lj->init(r,"http",[con=con](RegisterResponse &res){
+                    con->reply_=http::server::reply::stock_json(res.getJson());
+                    con->do_write();
+
+                });
+                s->db_jobs.push(lj);
+
+
+             }
+
+            //data_base.notify_one();
+
+
+
+
+
+
+    };
 
 
 
