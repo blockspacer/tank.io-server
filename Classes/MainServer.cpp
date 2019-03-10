@@ -41,26 +41,25 @@ void MainServer::new_login(USER_ID user_id,UserPort *user_port){
 }
 
 
-ChangeNameJob ChangeNameJob::instance;
-void ChangeNameJob::init(UserPort *user_port,MainServer *server){
-    memcpy(this,&ChangeNameJob::instance,4);
+
+void ChangeNameJob::init(UserPort *user_port){
     this->ses=user_port;
     this->server=server;
 }
 
 void ChangeNameJob::do_job(){
-    ChangeNameResponse r=server->change_display_name(ses->user_data);
+    ChangeNameResponse r=static_cast<MainServer*>(server)->change_display_name(ses->user_data);
 
     if(r.done)
         ses->tcp_send(&r,sizeof(ChangeNameResponse));
-    server->update_client_profile(ses->user_data->id);
+    static_cast<MainServer*>(server)->update_client_profile(ses->user_data->id);
 
 }
-SaveUserData SaveUserData::instance;
-void SaveUserData::init(const USER_ID user_id,MainServer *server){
-    memcpy(this,&SaveUserData::instance,4);
+
+void SaveUserData::init(const USER_ID user_id){
+
     this->user_id=user_id;
-    this->server=server;
+
 }
 
 void SaveUserData::do_job(){
@@ -69,33 +68,28 @@ void SaveUserData::do_job(){
 }
 
 
-SaveUseMony SaveUseMony::instance;
-void SaveUseMony::init(const USER_ID user_id,MainServer *server,int mony,const USE_DISCRIP dis){
-    memcpy(this,&SaveUseMony::instance,4);
+
+void SaveUseMony::init(const USER_ID user_id,int mony,const USE_DISCRIP dis){
     this->mony=mony;
     strcpy(this->dis,dis);
     this->user_id=user_id;
-    this->server=server;
 }
 
 void SaveUseMony::do_job(){
-    server->save_use_mony(user_id,mony,dis);
+    static_cast<MainServer*>(server)->save_use_mony(user_id,mony,dis);
 }
 
-LoadExtraData LoadExtraData::instance;
-void LoadExtraData::init(USER_ID user_id, MainServer *server){
-    memcpy(this,&LoadExtraData::instance,4);
+
+void LoadExtraData::init(USER_ID user_id){
     this->server=server;
     this->user_id=user_id;
 }
 void LoadExtraData::do_job(){
     server->db->load_extra_if_not_exist(user_id);
-    server->update_client_game_data(user_id);
+    static_cast<MainServer*>(server)->update_client_game_data(user_id);
 }
-SaveTeamLevel SaveTeamLevel::instance;
-void SaveTeamLevel::init(USER_ID user_id, int team_id, MainServer *server){
-    memcpy(this,&SaveTeamLevel::instance,4);
-    this->server=server;
+
+void SaveTeamLevel::init(USER_ID user_id, int team_id){
     this->user_id=user_id;
     this->team_id=team_id;
 
@@ -105,9 +99,7 @@ void SaveTeamLevel::do_job(){
 }
 
 
-SaveConfigs SaveConfigs::instance;
-void SaveConfigs::init(USER_ID user_id, int postion_id, MainServer *server){
-    memcpy(this,&SaveConfigs::instance,4);
+void SaveConfigs::init(USER_ID user_id, int postion_id){
     this->server=server;
     this->user_id=user_id;
     this->postion_id=postion_id;
@@ -118,9 +110,8 @@ void SaveConfigs::do_job(){
 }
 
 
-SaveRoom SaveRoom::instance;
-void SaveRoom::init(Room *room, MainServer *server){
-    memcpy(this,&SaveRoom::instance,4);
+
+void SaveRoom::init(Room *room){
     this->server=server;
     this->room=room;
 
@@ -453,8 +444,8 @@ void MainServer::top_hundred_request(UserPort *s, TopHundredRequest *msg){
 }
 
 void MainServer::update_user_db(USER_ID user_id ){
-    std::shared_ptr<SaveUserData>  lj=std::make_shared<SaveUserData>();
-    lj->init(user_id,this);
+    std::shared_ptr<SaveUserData>  lj=std::make_shared<SaveUserData>(this);
+    lj->init(user_id);
     db_jobs.push(lj);
 }
 
@@ -463,8 +454,8 @@ void MainServer::room_msg(UserPort *s, RoomMsg *mr){
 }
 void MainServer::first_udp_ping(UserPort *u){
     check_user_in_room(u,u);
-    std::shared_ptr<LoadExtraData>  lj=std::make_shared<LoadExtraData>();
-    lj->init(u->user_data->id,this);
+    std::shared_ptr<LoadExtraData>  lj=std::make_shared<LoadExtraData>(this);
+    lj->init(u->user_data->id);
     db_jobs.push(lj);
 
 
@@ -502,10 +493,10 @@ void MainServer::change_dispaly_name(UserPort *s,ChangeNameRequest *mr){
     s->user_data->name_changed+=1;
     //ip_db_msg_count[this->sender_endpoint_.address()]++;
     strcpy(s->user_data->display_name,mr->display_name);
-    std::shared_ptr<ChangeNameJob>  lj=std::make_shared<ChangeNameJob>();
+    std::shared_ptr<ChangeNameJob>  lj=std::make_shared<ChangeNameJob>(this);
 
 
-    lj->init(s,this);
+    lj->init(s);
     db_jobs.push(lj);
 
 
@@ -599,8 +590,8 @@ void MainServer::recive_msg(UserPort *s, BaseMessage *_msg,size_t byte_recive){
 }
 void MainServer::change_user_data(USER_ID user_id){
 
-    std::shared_ptr<SaveUserData> lj=std::make_shared<SaveUserData>();
-    lj->init(user_id,this);
+    std::shared_ptr<SaveUserData> lj=std::make_shared<SaveUserData>(this);
+    lj->init(user_id);
     db_jobs.push(lj);
 
     update_client_profile(user_id);

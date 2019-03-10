@@ -70,32 +70,7 @@ PAK_STRUCT ACKMSG:public BaseMessage{
 };
 
 
-PAK_STRUCT PreRegisterRequest:public BaseMessage{
-   REGISTER_CODE code;
-   PreRegisterRequest():BaseMessage(PREGISTERREQUEST){}
-};
 
-PAK_STRUCT PreRegisterResponse:public BaseMessage{
-  REGISTER_CODE code;
-  long long id_and_public_key;
-  long long hash_result;
-  PreRegisterResponse():BaseMessage(PREGISTERRESPONSE){}
-};
-
-PAK_STRUCT Register:public BaseMessage{
-    REGISTER_CODE code;
-    long long id_and_public_key;
-    long long hash_result;
-    long long private_key;
-    Register():BaseMessage(REGISTER){}
-};
-
-PAK_STRUCT RegisterResponse:public BaseMessage{
-    bool done;
-    PASSWORD pass;
-    COOCKIE cookie;
-    RegisterResponse():BaseMessage(REGISTER_RESPONSE){}
-};
 
 
 PAK_STRUCT LoginMSG:public BaseMessage{

@@ -143,6 +143,7 @@ struct CostumJob:public BaseJob{
 };
 //struct session ;
 struct TcpConnection;
+struct BaseServer;
 struct DBJob:public BaseJob{
     //UserPort *user_port;
     udp::endpoint udp_connection;
@@ -151,7 +152,7 @@ struct DBJob:public BaseJob{
     BaseServer *server;
 
 
-
+    DBJob(BaseServer *server):server(server){}
     void do_job(){
         cerr<<"this function can not be call its wrong"<<endl;
     }
@@ -159,7 +160,7 @@ struct DBJob:public BaseJob{
 };
 struct TcpConnection;
 struct LoginJob:public DBJob{
-    static LoginJob instance;
+    LoginJob(BaseServer *s):DBJob(s){}
     LoginMSG login;
     shared_ptr<TcpConnection> self;
     void do_job();
@@ -167,41 +168,30 @@ struct LoginJob:public DBJob{
     void init(TcpConnection *user_port,LoginMSG *login);
 };
 struct RegisterJob:public DBJob{
-    static RegisterJob instance;
-    boost::asio::ip::address address;
-    Register register_msg;
-    shared_ptr<TcpConnection> self;
+    RegisterJob(BaseServer *s):DBJob(s){}
+    RegisterRequest register_msg;
+    std::string address;
+    std::function<void(RegisterResponse &res)> callback;
     void do_job();
 
-    void init(TcpConnection *user_port,udp::endpoint udp_connection,Register *login,const boost::asio::ip::address &address);
+    void init(RegisterRequest *login,const string &address,std::function<void(RegisterResponse &res)>);
 };
 
 struct SetBuyItemUsed:public DBJob{
-    static SetBuyItemUsed instance;
-    BaseServer *server;
     int db_id;
     void do_job();
-    void init(int db_id,BaseServer *server);
+    void init(int db_id);
+    SetBuyItemUsed(BaseServer *s):DBJob(s){}
 };
 
 struct SaveAppVersion:public DBJob{
-    static SaveAppVersion instance;
-    BaseServer *server;
+    SaveAppVersion(BaseServer *s):DBJob(s){}
     USER_ID user_id;
     void do_job();
-    void init(USER_ID user_id,BaseServer *server);
+    void init(USER_ID user_id);
 };
 
 
-struct BigestDBJob:public DBJob{
-
-    void do_job(){
-        cerr<<"this function can not be call its wrong BigestDBJob::do_job"<<endl;
-    }
-    unsigned char data[1024];// in arraye lazem ast garche hich vaght estefade nemishvad am digar kelas ha az in hafeze estefade digari mikonan BigestDBJob az nazare hafeze bayad az hame bozrgtar bashad
-
-
-};
 
 struct TcpConnection : public std::enable_shared_from_this<TcpConnection>{
     static int count;
@@ -356,7 +346,7 @@ public:
     static long long get_time();
     static long long get_random_long_long();
     virtual void first_udp_ping(UserPort *u){};
-    virtual RegisterResponse *register_user(const Register *rgister_msg,std::string);
+    virtual RegisterResponse *register_user(const RegisterRequest *rgister_msg,std::string);
     virtual UserData *login_user(LoginMSG *msg);
 
     virtual void recive_msg(UserPort *s, BaseMessage *msg,size_t byte_size){}

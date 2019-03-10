@@ -17,64 +17,64 @@ struct MainServer;
 
 struct MainServer;
 struct ChangeNameJob:public DBJob{
-    static ChangeNameJob instance;
+    ChangeNameJob(MainServer *s):DBJob((BaseServer*)s){}
     ChangeNameRequest change_name_request;
-    MainServer *server;
+
     void do_job();
 
-    void init(UserPort *user_port,MainServer *server);
+    void init(UserPort *user_port);
 };
 
 struct SaveUserData:public DBJob{
-    static SaveUserData instance;
-    MainServer *server;
+    SaveUserData(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     USER_ID user_id;
     void do_job();
-    void init(USER_ID user_id,MainServer *server);
+    void init(USER_ID user_id);
 };
 struct SaveUseMony:public DBJob{
-    static SaveUseMony instance;
-    MainServer *server;
+    SaveUseMony(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     USER_ID user_id;
     int mony;
     USE_DISCRIP dis;
     void do_job();
-    void init(USER_ID user_id,MainServer *server,int ,const USE_DISCRIP);
+    void init(USER_ID user_id,int ,const USE_DISCRIP);
 };
 
 
 struct LoadExtraData:public DBJob{
-    static LoadExtraData instance;
-    MainServer *server;
+    LoadExtraData(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     USER_ID user_id;
     void do_job();
-    void init(USER_ID user_id,MainServer *server);
+    void init(USER_ID user_id);
 };
 struct SaveTeamLevel:public DBJob{
-    static SaveTeamLevel instance;
-    MainServer *server;
+    SaveTeamLevel(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     USER_ID user_id;
     int team_id;
     void do_job();
-    void init(USER_ID user_id,int team_id,MainServer *server);
+    void init(USER_ID user_id,int team_id);
 };
 
 struct SaveConfigs:public DBJob{
-    static SaveConfigs instance;
-    MainServer *server;
+    SaveConfigs(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     USER_ID user_id;
     int postion_id;
     void do_job();
-    void init(USER_ID user_id,int postion_id,MainServer *server);
+    void init(USER_ID user_id,int postion_id);
 };
 
 
 struct SaveRoom:public DBJob{
-    static SaveRoom instance;
-    MainServer *server;
+    SaveRoom(MainServer *s):DBJob((BaseServer*)s){}
+    //MainServer *server;
     Room *room;
     void do_job();
-    void init(Room  *room,MainServer *server);
+    void init(Room  *room);
 };
 
 class MainServer:public BaseServer{

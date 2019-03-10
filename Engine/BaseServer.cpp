@@ -114,16 +114,15 @@ void CostumJob::do_job(){
 
 
 void LoginJob::init(TcpConnection *tcp_connection,LoginMSG *msg){
-    memcpy(this,&LoginJob::instance,4);
     if(tcp_connection!=nullptr)
         self=shared_ptr<TcpConnection>(tcp_connection->shared_from_this());
 
     this->tcp_connection=tcp_connection;
     this->login=*msg;
-    this->server=tcp_connection->server;
+
 }
 
-LoginJob LoginJob::instance;
+
 void LoginJob::do_job(){
 
         DEBUGE(cerr<<"im im lambda of login"<<login.id<<"  "<<login.user_id<<endl);
@@ -168,20 +167,16 @@ void LoginJob::do_job(){
 
 
 }
-RegisterJob RegisterJob::instance;
-void RegisterJob::init(TcpConnection *tcp_connection,udp::endpoint udp_connection,Register *msg,const boost::asio::ip::address &addres){
-    memcpy(this,&RegisterJob::instance,4);
-    this->tcp_connection=tcp_connection;
-    if(tcp_connection!=nullptr){
+
+void RegisterJob::init(RegisterRequest *msg,const string &address,std::function<void(RegisterResponse &res)> callBack_){
+
+    /*if(tcp_connection!=nullptr){
         self=shared_ptr<TcpConnection>(tcp_connection->shared_from_this());
-    }
+    }/**/
     this->register_msg=*msg;
     this->address=address;
-    cerr<<address.to_string()<<endl;
-    this->udp_connection=udp_connection;
-    if(tcp_connection!=nullptr){
-        this->server=tcp_connection->server;
-    }
+    cerr<<address<<endl;
+    callback =callBack_;
 }
 
 
@@ -192,37 +187,26 @@ void RegisterJob::do_job(){
     cerr<<"im im lambda of register "<<endl;
 
 
-    RegisterResponse *r=server->register_user(&register_msg,address.to_string());
+    RegisterResponse *r=server->register_user(&register_msg,address);
     ses=new UserPort(server);
     ses->tcp_connection=tcp_connection;
-    if(tcp_connection!=nullptr){
-        tcp_connection->user_port=ses;
-    }else{
-        ses->udp_end_point_set(udp_connection);
-    }
+
     if(r->done){
         ses->cookie=r->cookie;
-        ses->user_data=ses->server->get_user_data_by_id(r->user_id);
-        ses->server->users_with_id_push(r->user_id,ses);
+        ses->user_data=ses->server->get_user_data_by_id(r->userId);
+        ses->server->users_with_id_push(r->userId,ses);
     }
-    if(tcp_connection!=nullptr){
-        ses->tcp_send(r,sizeof(RegisterResponse));
-        //tcp_connection->close();
-    }else{
-        ses->udp_end_point_set(udp_connection);
-        server->udp_send_and_push_out_box_to_handle_ACK(ses,r,sizeof(RegisterResponse));
-    }
-
-    self=nullptr;
+    callback(*r);
+    //self=nullptr;
     //ses->server->after_register(ses,r->user_id);
 
 }
 
-SetBuyItemUsed SetBuyItemUsed::instance;
-void SetBuyItemUsed::init(int db_id,BaseServer *server){
-    memcpy(this,&SetBuyItemUsed::instance,4);
+
+void SetBuyItemUsed::init(int db_id){
+
     this->db_id=db_id;
-    this->server=server;
+
 }
 
 
@@ -236,11 +220,10 @@ void SetBuyItemUsed::do_job(){
 void BaseServer::save_user_data(USER_ID user_id){
     db->save_user_data(user_id);
 }
-SaveAppVersion SaveAppVersion::instance;
-void SaveAppVersion::init(const USER_ID user_id,BaseServer *server){
-    memcpy(this,&SaveAppVersion::instance,4);
+
+void SaveAppVersion::init(const USER_ID user_id){
+
     this->user_id=user_id;
-    this->server=server;
 }
 
 void SaveAppVersion::do_job(){
@@ -307,8 +290,8 @@ void BaseServer::set_app_version(USER_ID user_id,int ap){
 
         SharedUdpEndPointMemory::update(user_id,up->get_zip());
 
-        auto lj=std::make_shared<SaveAppVersion>();
-        lj->init(user_id,this);
+        auto lj=std::make_shared<SaveAppVersion>(this);
+        lj->init(user_id);
         db_jobs.push(lj);
 
     }
@@ -553,44 +536,6 @@ void BaseServer::udp_recive(boost::system::error_code ec,udp::endpoint &sender_e
             DEBUGE(cerr<<"income new msg id user_id"<<msg->id<<" "<<msg->user_id<<endl);
             switch (msg->base_type)
             {
-                case BaseMessage::BaseType::PREGISTERREQUEST:
-                    {
-                            PreRegisterData prd;
-                            prd.id_and_public_key=PreRegisterData::id_count++;
-                            prd.private_key=10;
-                            prd.result=10;
-                            pre_register_data[prd.id_and_public_key]=prd;
-                            PreRegisterResponse r;
-                            r.id_and_public_key=prd.id_and_public_key;
-                            r.hash_result=prd.result;
-                            udp_send_and_push_out_box_to_handle_ACK(s,&r,sizeof(r));
-                    }
-                break;
-                case BaseMessage::BaseType::REGISTER :
-                     {
-                        ip_db_msg_count[this->sender_endpoint_.address()]++;
-
-                        DEBUGE(cerr<<"BaseMessage::BaseType::REGISTER"<<endl);
-                            Register *r=(Register*)msg;
-                         r->id_and_public_key;
-                         PreRegisterData prd=pre_register_data[r->id_and_public_key];
-
-                             if (prd.private_key == r->private_key || true){
-
-                                auto lj=std::make_shared<RegisterJob>();
-                                lj->init(nullptr,sender_endpoint_,r,sender_endpoint_.address());
-                                db_jobs.push(lj);
-
-                                pre_register_data.erase(r->id_and_public_key);
-
-
-                             }
-
-                            //data_base.notify_one();
-
-
-                        }
-                    break;
                 case BaseMessage::BaseType::MSG :
 
                     if(s->cookie==-1){
@@ -630,50 +575,6 @@ void BaseServer::tcp_recive(TcpConnection *tcp_conection,boost::system::error_co
     DEBUGE(cerr<<msg->base_type<<" length "<<length<<endl);
     switch (msg->base_type)
     {
-        case BaseMessage::BaseType::PREGISTERREQUEST:
-            {
-                    PreRegisterData prd;
-                    prd.id_and_public_key=PreRegisterData::id_count++;
-                    prd.private_key=10;
-                    prd.result=10;
-                    pre_register_data[prd.id_and_public_key]=prd;
-                    PreRegisterResponse r;
-                    r.id_and_public_key=prd.id_and_public_key;
-                    r.hash_result=prd.result;
-                    tcp_conection->tcp_send(&r,sizeof(r));
-            }
-        break;
-        case BaseMessage::BaseType::REGISTER :
-             {
-                ip_db_msg_count[this->sender_endpoint_.address()]++;
-
-                DEBUGE(cerr<<"BaseMessage::BaseType::REGISTER"<<endl);
-                    Register *r=(Register*)msg;
-                 r->id_and_public_key;
-                 PreRegisterData prd=pre_register_data[r->id_and_public_key];
-
-                     if (prd.private_key == r->private_key || true){
-
-
-
-
-                        auto lj=std::make_shared<RegisterJob>();
-
-
-                        pre_register_data.erase(r->id_and_public_key);
-                        //LoginJob *j=LoginJob::create(this,s,(LoginMSG*)msg);
-                        udp::endpoint udp_connection;
-                        lj->init(tcp_conection,udp_connection,r,tcp_conection->tcp_socket.remote_endpoint().address());
-                        db_jobs.push(lj);
-
-
-                     }
-
-                    //data_base.notify_one();
-
-
-                }
-            break;
         case BaseMessage::BaseType::LOGIN :
 
             {
@@ -780,8 +681,8 @@ void BaseServer::tcp_recive(TcpConnection *tcp_conection,boost::system::error_co
 }
 
 void BaseServer::use_buy_item(int db_id){
-    std::shared_ptr<SetBuyItemUsed> t=std::make_shared<SetBuyItemUsed>();
-    t->init(db_id,this);
+    std::shared_ptr<SetBuyItemUsed> t=std::make_shared<SetBuyItemUsed>(this);
+    t->init(db_id);
     db_jobs.push(t);
 }
 
@@ -936,7 +837,7 @@ void BaseServer::db_dun(){
 }
 
 
-RegisterResponse *BaseServer::register_user(const Register *rgister_msg,std::string ip){
+RegisterResponse *BaseServer::register_user(const RegisterRequest *rgister_msg,std::string ip){
     return db->register_user(rgister_msg->code,ip);
 }
 UserData *BaseServer::login_user(LoginMSG *msg){
