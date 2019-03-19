@@ -74,6 +74,7 @@ public:
         return shots;
     }
     map<int,Tank* > tanks;
+    set<PlatformLine*> lines;
     set<CircleBlock*> blocks; //TODO for beter performance change to kind of vector
     map<USER_ID,Player*> players;
     ViewHandler *view_handler=nullptr;
@@ -87,7 +88,7 @@ public:
     vector<GameConf> confs;
 
 
-    set<PlatformLine*> lines;
+
     vector<BoardObject*> targets;
     bool is_live=true;
     bool is_win;
@@ -121,7 +122,7 @@ public:
     bool check_collision();
     void update(bool fast=true);
     void init();
-    void add_player_with_tank(long long);
+    Player *add_player_with_tank(long long);
     void set_tank(long long player_id,
                   float room_time,
                   Point pos,

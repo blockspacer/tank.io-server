@@ -10,13 +10,16 @@ void Misle::get_data(BoardObjectState *s)const{
     LiveBoardObject::get_data(s);
     s->object_type=BoardObjectState::ObjectType::MISLE;
     s->owner_id=owner_id;
+    MisleState *ss=static_cast<MisleState*>(s);
+    ss->max_dis=max_dis;
+    ss->damage=damage;
 }
 MyDataBlock Misle::get_data()const{
-    auto data=new LiveBoardObjectState();
+    auto data=new MisleState();
     MyDataBlock res;
     get_data(data);
     res.data = (char*)data;
-    res.size = sizeof(LiveBoardObjectState);
+    res.size = sizeof(MisleState);
     return res;
 }
 void Misle::set_data(const BoardObjectState *state){
@@ -25,10 +28,21 @@ void Misle::set_data(const BoardObjectState *state){
     LiveBoardObject::set_data(state);
     //speed=state->speed;
     owner_id=state->owner_id;
+    auto *ss=static_cast<const MisleState*>(state);
+    max_dis=ss->max_dis;
+    damage=ss->damage;
 }
 
 void Misle::update(){
+    float t=core->step_time*(core->total_time-born_step);
+    if(t>max_dis){
+        miss();
+    }
     LiveBoardObject::update();
+}
+void Misle::miss(){
+    for_remove=true;
+    dead();
 }
 
 void Misle::clear_collision(){
@@ -44,16 +58,16 @@ void Misle::clear_collision(){
         for(PlatformLine *line: core->lines){
 
             Point p=_next_pos-line->pos;
-            Point mz={p.x*line->mozdavaj.x-p.y*line->mozdavaj.y , p.x*line->mozdavaj.y+p.y*line->mozdavaj.x};
+            Point mz=p.rotate(line->l.mozdavaj);
 
             Point prv_p=pos-line->pos;
-            Point prv_mz={prv_p.x*line->mozdavaj.x-prv_p.y*line->mozdavaj.y ,
-                          prv_p.x*line->mozdavaj.y+prv_p.y*line->mozdavaj.x};
+            Point prv_mz=prv_p.rotate(line->l.mozdavaj);
+
             if((prv_mz.y <-0.00001 && mz.y>0.00001)||
                     (prv_mz.y >0.00001 && mz.y<-0.00001)){
                 float mz_x=(prv_mz.x*abs(mz.y)+mz.x*abs(prv_mz.y))/
                         (abs(prv_mz.y)+abs(mz.y));
-                if(abs(mz_x)<line->h_d){
+                if(abs(mz_x)<line->l.h_d){
                     for_remove=true;
                     if(view)
                         view->on_ded();
@@ -62,19 +76,8 @@ void Misle::clear_collision(){
                 }
 
             }
-            if(abs(mz.x)<line->h_d && abs(mz.y)<r){
+            if(abs(mz.x)<line->l.h_d && abs(mz.y)<r){
                 float f=r-abs(mz.y);
-                if(mz.y<0)
-                    f*=-1;
-                float upc=line->amud.dot(v);
-                float emc=line->direction.dot(v);
-                force = -line->amud*upc;
-                force+= line->direction*emc;
-                //part.sum_of_force+=force;
-                //force.normalize();
-                //v=force*speed; reflect object
-                //if(view_handler!=nullptr)
-                //    view_handler->show_cross_with_block({0,0},0);
                 if(view)
                     view->on_ded();
                 view=nullptr;
@@ -99,7 +102,7 @@ void Misle::clear_collision(){
         float d=p.length();
         if(d<R){
            for_remove=true;
-            tank->get_damage(10);
+            tank->get_damage(damage);
            if(view)
                view->on_ded();
            view=nullptr;

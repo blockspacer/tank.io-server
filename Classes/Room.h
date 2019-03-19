@@ -106,6 +106,7 @@ struct Room:public BaseRoom{
         return true;
     }
     bool update();
+    void init();
     int passd[3]={0,0,0};
     bool room_is_close=false;
 

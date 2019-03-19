@@ -4,6 +4,7 @@
 #include "AbstractTankViewHandler.h"
 #include "PlatformLine.h"
 #include "Misle.h"
+#include "MathShapeUtils/Base.h"
 
 void Unit::clear_collision(){
 
@@ -18,22 +19,23 @@ void Unit::clear_collision(){
         //part.global_pos=pos+part._pos;
         for(const PlatformLine *line: core->lines){
             Point p=_next_pos-line->pos;
-            Point mz=p.rotate(line->mozdavaj);
 
-            if(abs(mz.x)<line->h_d && abs(mz.y)<r){
+            Point mz=p.rotate(line->l.mozdavaj);
+
+            if(abs(mz.x)<line->l.h_d && abs(mz.y)<r){
                 float f=r-abs(mz.y);
                 if(mz.y<0)
                     f*=-1;
-                float upc=line->amud.dot(v);
-                float emc=line->direction.dot(v);
-                force = -line->amud*upc;
-                force+= line->direction*emc;
+                float upc=line->l.amud.dot(v);
+                float emc=line->l.direction.dot(v);
+                force = -line->l.amud*upc;
+                force+= line->l.direction*emc;
                 SF+=force;
                 ph=true;
                 if(mz.y>0)
-                    _next_pos+=-line->amud*(r-(mz.y));
+                    _next_pos+=-line->l.amud*(r-(mz.y));
                 else
-                    _next_pos+=line->amud*(r+(mz.y));
+                    _next_pos+=line->l.amud*(r+(mz.y));
 
                 //part.sum_of_force+=force;
                 //force.normalize();
@@ -83,7 +85,10 @@ void Unit::clear_collision(){
     }
 
 }
+void Unit::get_damage(int x){
+    healt-=x;
 
+}
 void Unit::get_data(BoardObjectState *s)const{
     LiveBoardObject::get_data(s);
     s->object_type=BoardObjectState::ObjectType::TANK;
@@ -116,7 +121,7 @@ void Unit::set_data(const BoardObjectState *state){
 
 
 Tank::Tank(GameCore *core):Unit(core){
-    max_angle_speed=0.5*3.1415;
+    max_angle_speed=0.5*3.1415*10;
     r=50;
     CirclePartShape p;
     p.r=5;
@@ -129,9 +134,18 @@ Tank::Tank(GameCore *core):Unit(core){
     parts.push_back(p);
     p._pos={-80,0};
     parts.push_back(p);
+    target_range=1000;
 
+    max_shot=3;
+    shot_damage=30;
 }
 void Tank::update_inputs(){
+    if(ai!=nullptr)
+        ai->step();
+    if(speed>max_speed)
+        speed=max_speed;
+    if(speed<0)
+        speed=0;
     while(inps.size()){
         auto i=inps.begin();
         if(i->second!=nullptr && i->second->trigger_step >= my_step)
@@ -182,6 +196,7 @@ void Tank::update_angle(){
             angle_speed=-max_angle_speed;/**/
     }
 
+
     float d_a=dt*angle_speed;
     if(dis_angle<-d_a ){
         angle+=d_a;
@@ -192,6 +207,7 @@ void Tank::update_angle(){
 
         angle=target_angle;
     }/**/
+    angle=target_angle;
 
 
 
@@ -207,6 +223,10 @@ void Tank::update(){
 
 
     update_angle();
+
+    remain_shot+=core->step_time*1.5;
+    if(remain_shot>max_shot)
+        remain_shot=max_shot;
 
     ++my_step;
     history[my_step]=PostionConfig{pos=pos,z=z};
@@ -224,29 +244,46 @@ void Tank::update(){
 
 }
 
-Misle *Tank::shot(OBJ_ID shot_id){
+Misle *Tank::shot(OBJ_ID shot_id,bool targeted,float angle2){
     CCLOG("Tank::shot %lld",shot_id);
+    if(remain_shot<1)
+        return nullptr;
+    remain_shot-=1;
+
     Misle *t=core->create_shot();
+    t->damage=shot_damage;
     t->id=shot_id;
     t->owner_id=id;
-    t->pos=pos+Point(cos(angle),sin(angle))*80;
+    if(!targeted){
+        auto o_id=sugesst_target();
+        if(o_id!=0){
+            Point p=core->all_objects[o_id]->pos-pos;
+            angle2=Base2D::find_angle<Point>(p);
+            canon_angle=angle2;
+        }else
+            angle2=canon_angle;
+    }
+    t->pos=pos+Point(cos(angle2),sin(angle2))*80;
     t->_next_pos=pos;
-    t->angle=angle;
-    t->speed=2*800;
+    t->angle=angle2;
+    t->speed=2000;
     t->z=50;
+    t->max_dis=0.8;
     core->init_shot(t);
     return t;
 }
-Tank::InputFarman* Tank::add_action(STEP_VALUE action_time,float f,int client_id){
+Tank::InputFarman* Tank::add_action(STEP_VALUE action_time,float f,float s,int client_id){
      CCLOG("shot_action %d \n",client_id);
     auto p=new InputFarman();
     Input::ptr i=Input::ptr(p);
     p->trigger_step=action_time;
     p->client_id=client_id;
     p->target_farman=f;
+    p->target_speed=s;
     p->id=action_time;//TODO bayad dorst beshe
     inps.insert(std::pair<STEP_VALUE,Input::ptr>(p->trigger_step,i));
     cinps[client_id]=i;
+    //view_handler->show_shot_animation()
     return p;
 }
 void Tank::Input::get_data(State *data)const{
@@ -265,6 +302,7 @@ void Tank::InputFarman::get_data(Input::State *data)const{
     Input::get_data(data);
     auto res=static_cast<InputFarman::State*>(data);
     res->farman=target_farman;
+    res->speed=target_speed;
     res->type=State::Type::MOVMENT;
 
 
@@ -276,23 +314,28 @@ void Tank::InputFarman::set_data(const Input::State *data){
     Input::set_data(data);
     auto res=static_cast<const State*>(data);
     target_farman=res->farman;
+    target_speed=res->speed;
 }
 
 void Tank::InputShot::run_on_this(Tank *thiz)const{
     if(thiz->core->server)
-        Misle *shot=thiz->shot(shot_id);
+        Misle *shot=thiz->shot(shot_id,targetet,angle);
 }
 void Tank::InputShot::get_data(Input::State *data)const{
     Input::get_data(data);
     auto res=static_cast<State*>(data);
     res->shot_id=shot_id;
     res->type=State::Type::SHOT;
+    res->targetet=targetet;
+    res->angle=angle;
     data->size_of_data=sizeof (Tank::InputShot::State);
 }
 void Tank::InputShot::set_data(const Input::State *data){
     Input::set_data(data);
     auto res=static_cast<const State*>(data);
     shot_id=res->shot_id;
+    targetet=res->targetet;
+    angle=res->angle;
 }
 
 Tank::InputShot* Tank::add_shot_action(STEP_VALUE action_time,int client_id){
@@ -308,6 +351,24 @@ Tank::InputShot* Tank::add_shot_action(STEP_VALUE action_time,int client_id){
     sinps[p->id]=i;
     return p;
 }
+
+OBJ_ID Tank::sugesst_target(){
+    float best_target=target_range;
+    OBJ_ID res=0;
+    for(auto t : core->tanks)//TODO check TILE
+        if(t.second!=nullptr &&
+           !t.second->for_remove &&
+            t.second!=this &&
+            (t.second->team_index!=team_index || team_index==0)){
+            Point p=t.second->pos;
+            p-=pos;
+            if(p.length()<best_target){
+                best_target=p.length();
+                res=t.first;
+            }
+        }
+    return res;
+}
 Tank::Input* Tank::get_action(int client_id){
     if(cinps.find(client_id)==cinps.end())
         return nullptr;
@@ -321,6 +382,8 @@ void Tank::add_created_action(Input *inp){
     CCLOG("add_created_action %d",inp->id);
     sinps[inp->id]=i;
 }
+
+
 void Tank::show_shot_animation(STEP_VALUE shot_time){
     if(view_handler)
         view_handler->show_shot_animation((shot_time-core->total_time)*core->step_time);
@@ -330,8 +393,10 @@ void Tank::get_data(BoardObjectState *s)const{
     Unit::get_data(s);
     s->object_type=BoardObjectState::ObjectType::TANK;
     auto cs=static_cast<TankState*>(s);
-
-
+    cs->canon_angle=canon_angle;
+    cs->target_range=target_range;
+    cs->shot_damage=shot_damage;
+    cs->remain_shot=remain_shot;
 }
 MyDataBlock Tank::get_data()const{
     auto data=new TankState();
@@ -345,8 +410,11 @@ void Tank::set_data(const BoardObjectState *state){
     if(last_update_from_server_time>state->room_time)
         return;
     Unit::set_data(state);
-
-
+    auto cs=static_cast<const TankState*>(state);
+    canon_angle=cs->canon_angle;
+    target_range=cs->target_range;
+    shot_damage=cs->shot_damage;
+    remain_shot=cs->remain_shot;
 }
 
 

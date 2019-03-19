@@ -37,7 +37,11 @@ void BoardObject::set_data(const BoardObjectState *state){
     last_update_from_server_time=state->room_time;
     my_step=last_update_from_server_time;
 }
-
+void LiveBoardObject::dead(){
+    for_remove=true;
+    if(view!=nullptr)
+        static_cast<ViewShadow*>(view)->on_ded();
+}
 void LiveBoardObject::update(){
     float dt=core->step_time;
     v=Point(cos(angle),sin(angle))*speed;
@@ -46,9 +50,11 @@ void LiveBoardObject::update(){
 void LiveBoardObject::get_data(BoardObjectState *state)const{
     BoardObject::get_data(state);
     auto cstate=static_cast<LiveBoardObjectState*>(state);
+    cstate->max_speed=max_speed;
     cstate->speed=speed;
     cstate->healt=healt;
     cstate->max_healt=max_healt;
+    cstate->born_step=born_step;
 
 
 }
@@ -58,6 +64,7 @@ MyDataBlock LiveBoardObject::get_data()const{
     get_data(data);
     res.data = (char*)data;
     res.size = sizeof(LiveBoardObjectState);
+
     return res;
 }
 void LiveBoardObject::set_data(const BoardObjectState *state){
@@ -66,6 +73,8 @@ void LiveBoardObject::set_data(const BoardObjectState *state){
     speed=cstate->speed;
     healt=cstate->healt;
     max_healt=cstate->max_healt;
+    born_step=cstate->born_step;
+    max_speed=cstate->max_speed;
 
 }
 

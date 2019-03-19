@@ -3,7 +3,7 @@
 #include "GameCore/Tank.h"
 #include "GameCore/Misle.h"
 #include "GameCore/PlatformLine.h"
-
+#include "GameCore/Ai/RandomTankAi.h"
 void ServerViewShadow::on_ded(){
     master->triger_change(obj->id);
 }
@@ -190,17 +190,31 @@ std::shared_ptr<Room> Room::create(MainServer *server){
             room->handler=
             new ServerViewHandler(room->game_core.get(),room.get());
 
-    room->game_core->total_time=0;
-    room->game_core->milisecond_per_step=20;
-    room->game_core->start_time=server->total_time;
-    room->game_core->server=true;
-    room->game_core->init();
     room->server=server;
+    room->init();
+
+
+
+
 
 
     return room;
 }
+void Room::init(){
+    game_core->init();
+    game_core->total_time=0;
+    game_core->milisecond_per_step=20;
+    game_core->start_time=server->total_time;
+    game_core->server=true;
 
+    for(int i=0; i<10; ++i){
+        auto p=game_core->add_player_with_tank(100+i);
+        ConstantTankAi *ai=new ConstantTankAi(p->tank);
+        for(int j=0; j<10; ++j)
+            ai->array.push_back(Point(rand()%6000-3000,rand()%6000-3000));
+        p->tank->ai=ai;
+    }
+}
 
 
 void Room::get_msg(UserPort *up,GameActionMsg *mr){
@@ -236,7 +250,7 @@ void Room::get_msg(UserPort *up,GameActionMsg *mr){
 
        if(action->type==Tank::Input::State::Type::MOVMENT){
            auto cs=static_cast<Tank::InputFarman::State*>(action.get());
-           inp=player->tank->add_action(act_time,cs->farman,action->client_id);
+           inp=player->tank->add_action(act_time,cs->farman,cs->speed,action->client_id);
        }else
            inp=player->tank->add_shot_action(act_time,action->client_id);
 

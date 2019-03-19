@@ -9,7 +9,7 @@ GameCore::GameCore()
  CCLOG("GameCore::GameCore");
 
 }
-void GameCore::add_player_with_tank(long long user_id){
+Player *GameCore::add_player_with_tank(long long user_id){
     Player *p=players[user_id];
     if(p==nullptr){
         players[user_id]=p=new Player();
@@ -17,7 +17,7 @@ void GameCore::add_player_with_tank(long long user_id){
     }
     CCLOG("add_player_with_tank call");
     if(p->tank!=nullptr)
-        return ;
+        return p;
 
     Tank *tank=create_tank();
 
@@ -25,9 +25,10 @@ void GameCore::add_player_with_tank(long long user_id){
     tank->r=100;
     tank->pos={100,100};
     tank->angle=PI/2;
-    tank->speed=300;
+    tank->max_speed=400;
     p->tank=tank;
     init_tank(tank);
+    return p;
 }
 void GameCore::set_tank(long long player_id, float room_time, Point pos,float speed, float angle){
     CCLOG("set_tank");
@@ -128,12 +129,14 @@ Misle *GameCore::create_shot(){
 
     Misle *t=new Misle(this);
     t->id=generate_shot_id();
+    t->damage=30;
     return t;
 
 }
 
 void GameCore::init_shot(Misle *misle){
     CCLOG("init_shot %lld \n",misle->id);
+    misle->born_step=total_time;
     shots[misle->id]=misle;
     all_objects[misle->id]=misle;
      if(misle->view==nullptr)
@@ -182,10 +185,18 @@ double GameCore::PI=3.14159265358979323846 ;
 
 void GameCore::update(bool fast){
     ++total_time;
+    CCLOG("total_time %d",total_time);
     float dt=step_time;
 
     vector<int> for_remove;
-    for(auto t:shots)if(t.second==nullptr || t.second->for_remove){
+    if(server)
+        for(auto t:tanks)if(t.second!=nullptr)
+            if(t.second->healt<0){
+                t.second->for_remove=true;
+                if(t.second->view_handler)
+                    t.second->view_handler->on_ded();
+            }
+    for(auto t:all_objects)if(t.second==nullptr || t.second->for_remove){
         for_remove.push_back(t.first);
     }
     for(auto t:for_remove){

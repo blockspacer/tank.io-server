@@ -64,10 +64,9 @@ struct MJsonPair{
     void add_to(rapidjson::Value &js,rapidjson::Document::AllocatorType& allocator)const;
 };
 struct JsonUtil{
-    rapidjson::Document jsonDoc;
-    rapidjson::Value js=rapidjson::Value(rapidjson::kObjectType);
-    rapidjson::Document::AllocatorType *allocator;
-    static JsonUtil create(const vector<MJsonPair> &vec);
-    string to_string()const;
+
+    //rapidjson::Document::AllocatorType *allocator;
+    static rapidjson::Value create(rapidjson::Document::AllocatorType& ,const vector<MJsonPair> &vec);
+    static string to_string(const rapidjson::Value &js);
 };
 #endif // JSON_H

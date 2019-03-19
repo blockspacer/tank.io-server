@@ -1,4 +1,5 @@
 #include "jsonutils.h"
+#include "cocos2d_server/cocos2d_server.h"
 void MJsonPair::add_to(rapidjson::Value &js,rapidjson::Document::AllocatorType& allocator)const{
     rapidjson::Value key(this->key, allocator);
     if(value.type==MJsonValue::INT)
@@ -24,18 +25,24 @@ void MJsonPair::add_to(rapidjson::Value &js,rapidjson::Document::AllocatorType& 
         js.AddMember(key,v,allocator);/**/
     }
 }
-string JsonUtil::to_string()const{
+
+string JsonUtil::to_string(const rapidjson::Value &js){
+    CCLOG("JsonUtil::to_string");
     rapidjson::StringBuffer strbuf;
+    CCLOG("rapidjson::StringBuffer strbuf");
     rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+    CCLOG("rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf)");
     js.Accept(writer);
+    CCLOG("js.Accept(writer)");
     auto s=string(strbuf.GetString(), strbuf.GetSize());
+    CCLOG("%s",s.c_str());
     return s;/**/
 }
-JsonUtil JsonUtil::create(const vector<MJsonPair> &vec){
-    JsonUtil jsu;
-    jsu.jsonDoc.SetObject();
+rapidjson::Value JsonUtil::create(rapidjson::Document::AllocatorType& allocator,const vector<MJsonPair> &vec){
+    rapidjson::Value js=rapidjson::Value(rapidjson::kObjectType);
+
     for(auto t: vec){
-        t.add_to(jsu.js,jsu.jsonDoc.GetAllocator());
+        t.add_to(js,allocator);
     }
-    return jsu;
+    return js;
 };

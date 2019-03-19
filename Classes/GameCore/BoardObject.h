@@ -124,22 +124,25 @@ struct BoardObject{
 PAK_STRUCT LiveBoardObjectState :public BoardObjectState{
     float speed;
     int max_healt;
+    float max_speed=0;
     int healt;
+    STEP_VALUE born_step;
 };
 
 struct LiveBoardObject:public BoardObject{
     float speed=0;
+    float max_speed=0;
     Point v;
     float v_z;
     int max_healt;
     int healt;
-
+    STEP_VALUE born_step;
     map<long,PostionConfig> history;
 
     LiveBoardObject(GameCore *core):BoardObject (core){}
     void remove();
     virtual void update();
-
+    void dead();
 
     virtual void get_data(BoardObjectState *s)const;
     virtual MyDataBlock get_data()const;

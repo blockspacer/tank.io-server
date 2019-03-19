@@ -4,6 +4,7 @@
 #include "list"
 #include <memory>
 #include <vector>
+#include "AbstractTankViewHandler.h"
 struct Tank;
 struct Unit;
 struct AbstractTankViewHandler;
@@ -47,9 +48,7 @@ struct Unit:public LiveBoardObject{
     float get_health_perecentage()const{
         return healt*100/max_healt;
     }
-    void get_damage(int x){
-        healt-=x;
-    }
+    void get_damage(int x);
 
     void clear_collision();
 
@@ -67,21 +66,37 @@ struct Tower:public LiveBoardObject{
 
 
 PAK_STRUCT TankState:public UnitState{
+        float target_range;
+        float canon_angle;
+        float remain_shot;
+        int shot_damage;
+};
+struct TankAi{
+    Tank *target;
+    TankAi(Tank *target):target(target){
 
-
+    }
+    virtual void step()=0;
 };
 struct Tank:public Unit{
 
 
+    float target_range;
+    float canon_angle=0;
+    int max_shot;
+    float remain_shot;
 
+    int shot_damage;
 
+    OBJ_ID team_index=0;
+    TankAi *ai=nullptr;
     void update_inputs();
     void update_angle();
     void update()override;
 
     void set_target_angle(float t_angle);
 
-    Misle *shot(OBJ_ID shot_id);
+    Misle *shot(OBJ_ID shot_id,bool targeted,float angle);
     Tank(GameCore *core);
 
 
@@ -125,23 +140,34 @@ struct Tank:public Unit{
     };
     struct InputFarman: public Input{
           float target_farman;
+          float target_speed;
           PAK_STRUCT State:public Input::State{
               float farman;
+              float speed;
               bool check(){
                   return true;
               }
           };
           virtual void run_on_this(Tank *thiz)const{
               thiz->target_angle=target_farman;
+              thiz->speed=target_speed;
+              if(thiz->speed<0)
+                  thiz->speed=0;
+              if(thiz->speed>thiz->max_speed)
+                  thiz->speed=thiz->max_speed;
           }
           virtual void get_data(Input::State *data)const;
           virtual void set_data(const Input::State *data);
     };
     struct InputShot: public Input{
         OBJ_ID shot_id;
+        bool targetet=false;
+        float angle;
         PAK_STRUCT State:public Input::State{
             int shot;
             OBJ_ID shot_id;
+            bool targetet=false;
+            float angle;
             bool check(){
                 return true;
             }
@@ -154,9 +180,12 @@ struct Tank:public Unit{
     std::multimap<STEP_VALUE,Input::ptr > inps;
     std::map<int,Input::ptr> cinps;
     std::map<int,Input::ptr> sinps;
-    virtual InputFarman* add_action(STEP_VALUE action_time,float f,int client_id);
+    virtual InputFarman* add_action(STEP_VALUE action_time,float f,float s,int client_id);
     virtual InputShot* add_shot_action(STEP_VALUE action_time,int client_id);
     virtual Input* get_action(int client_id);
+
+    virtual OBJ_ID sugesst_target();
+
     virtual void show_shot_animation(STEP_VALUE shot_time);
     void add_created_action(Input *inp);
 };

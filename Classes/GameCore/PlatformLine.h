@@ -1,19 +1,20 @@
 #ifndef PLATFORMLINE_H
 #define PLATFORMLINE_H
 #include "BoardObject.h"
-
+#include "MathShapeUtils/SegmentLine.h"
 PAK_STRUCT PlatformLineState :public BoardObjectState{
     ZIP_Point start,finish;
 };
 
 struct PlatformLine:public  BoardObject
 {
-    Point mozdavaj;
-    Point direction;
-    Point amud;
-    float h_d;
+    //Point mozdavaj;
+    //Point direction;
+    //Point amud;
+    //float h_d;
 public:
-    Point start,finish;
+    SegmentLine l;
+    //Point start,finish;
     //PlatformLine(GameCore *core);
 
 

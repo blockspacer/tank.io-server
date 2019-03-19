@@ -18,8 +18,8 @@ struct PreRegisterResponse:public BaseMessage{
 
 struct RegisterRequest{
     std::string code;
-    rapidjson::Value getJson(){
-        return JsonUtil::create({{"code",code}}).js;
+    rapidjson::Value getJson(rapidjson::Document::AllocatorType& allocator){
+        return JsonUtil::create(allocator,{{"code",code}});
     }
 };
 
@@ -28,12 +28,12 @@ struct RegisterResponse{
     COOCKIE cookie;
     USER_ID userId;
     string pass;
-    rapidjson::Value getJson(){
-        return JsonUtil::create({{"done",done},
+    rapidjson::Value getJson(rapidjson::Document::AllocatorType& allocator){
+        return JsonUtil::create(allocator,{{"done",done},
                                  {"userId",userId},
                                  {"cookie",cookie},
                                  {"pass",pass}
-                                }).js;
+                                });
     }
     void loadFromJson(rapidjson::Value &js){
         done=js["done"].GetBool();
