@@ -28,18 +28,17 @@ void ServerViewHandler::handle_block(PlatformLine *block){
 
 }
 void ServerViewHandler::triger_change(int obj_id){
-    time_og_last_change[obj_id]=game_core->total_time;
     last_step_events.push_back(obj_id);
 
 }
-void ServerViewHandler::get_array(vector<MyDataBlock> &forSend,TankState16Msg *tank_state){
+void ServerViewHandler::get_array(vector<MyDataBlock> &forSend,size_t offset,size_t size,TankState16Msg *tank_state){
 
     tank_state->size_of_data=sizeof(TankState16Msg);
     size_t n=forSend.size();
-    if(n>16)
-        n=16;
+    if(n>offset+size)
+        n=offset+size;
     tank_state->array.init(tank_state,n);
-    for(size_t i=0; i<n; ++i){
+    for(size_t i=offset; i<n; ++i){
         auto &t=forSend[i];
         //MyPointer p;
         MyPointer *pp=tank_state->array.getIndex(i);
@@ -58,7 +57,7 @@ void ServerViewHandler::send_to_user(UserPort *up, BoardObjectEvent* e){
     vector<MyDataBlock> forSend;
     MyDataBlock res=e->get_data();
     forSend.push_back(res);
-    get_array(forSend,tank_state);
+    get_array(forSend,0,1,tank_state);
 
     room->server->udp_send(up,tank_state,tank_state->size_of_data);
 
@@ -70,7 +69,7 @@ void ServerViewHandler::send_to_users(BoardObjectEvent *e){
     vector<MyDataBlock> forSend;
     MyDataBlock res=e->get_data();
     forSend.push_back(res);
-    get_array(forSend,tank_state);
+    get_array(forSend,0,1,tank_state);
 
     for(auto t:room->users){
          UserPort *up=t.second;
@@ -87,42 +86,59 @@ void ServerViewHandler::init_client(UserPort *up,int last_got_event_id){
     vector<MyDataBlock> forSend;
 
     auto &set=ackSendedEvent[up->client_process_id];
-    for(auto t : game_core->all_objects){
-        auto obj=game_core->get_object(t.first);
-        if(obj==nullptr || obj->for_remove)
+    for(auto t : game_core->zombies){
+        auto obj=game_core->get_live_or_zombiee(t.first);
+        if(obj==nullptr)
             continue;
+        if( obj->for_remove){
+            if(game_core->total_time > obj->last_event_time +60*3){
+                game_core->zombies.erase(obj->id);
+                continue;
 
+            }
+        }
 
-
-        if(set.find(t.first)!=set.end() && set[t.first] >= obj->last_event_time)
+        auto cs=set[t.first];
+        if(cs.lastAck >= obj->last_event_time)
             continue;
+        /*if(cs.lastSend >= obj->last_event_time && cs.lastSend+40<game_core->total_time){//TODO fix this
+            continue;
+        }/**/
 
+        if(obj->for_remove){
+            auto data=new BoardObjectState();
+            MyDataBlock res;
+            obj->get_removed_data(data);
+            data->event_type=BoardObjectState::EventType::REMOVE;
+            res.data = (char*)data;
+            res.size = sizeof(TankState);
+            forSend.push_back(res);
+            continue;
+        }
 
-
-        MyDataBlock res=game_core->get_object(t.first)->get_data();
+        MyDataBlock res=obj->get_data();
         if(res.size>100){
             cerr<<"res.size>100"<<endl;
         }
         forSend.push_back(res);
 
     }
-    for(auto t:for_remove){
-        time_og_last_change.erase(t);
-    }
+
     try{
-        if(forSend.size()<1)
-            return ;
-        cerr<<"new tank state "<<forSend.size()<<endl;
-        char *_data=new char[4*1024];
-        TankState16Msg *tank_state=new(_data) TankState16Msg();
-        get_array(forSend,tank_state);
-        cerr<<tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time<<endl;
-        cerr<<"fff "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+        for(size_t i=0; i<forSend.size(); ){
+            cerr<<"new tank state "<<forSend.size()<<endl;
+            char *_data=new char[4*1024];
+            TankState16Msg *tank_state=new(_data) TankState16Msg();
+            get_array(forSend,i,16,tank_state);
+            i+=16;
+            cerr<<tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time<<endl;
+            cerr<<"fff "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
 
-        room->server->udp_send(up,tank_state,tank_state->size_of_data);
-
-        cerr<<&(tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time)-(int*)tank_state<<endl;
-        cerr<<"fff2 "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+            room->server->udp_send(up,tank_state,tank_state->size_of_data);
+            delete _data;
+            cerr<<&(tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time)-(int*)tank_state<<endl;
+            cerr<<"fff2 "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+        }
     }catch(std::exception& e){
         cerr<<"exception "<<e.what()<<endl;
     }
@@ -148,10 +164,9 @@ void Room::update_clients(){
 }
 void Room::event_ack(UserPort *up,OBJ_ID event_id,STEP_VALUE step){
     //up->incom_events.insert(event_id);
-    if(handler->time_og_last_change.find(event_id)!=handler->time_og_last_change.end()){
-      if(handler->ackSendedEvent[up->client_process_id][event_id]<step)
-          handler->ackSendedEvent[up->client_process_id][event_id]=step;
-    }
+    if(handler->ackSendedEvent[up->client_process_id][event_id].lastAck<step)
+       handler->ackSendedEvent[up->client_process_id][event_id].lastAck=step;
+
 }
 
 bool Room::update(){

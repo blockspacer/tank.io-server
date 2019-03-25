@@ -39,6 +39,8 @@ void BoardObject::set_data(const BoardObjectState *state){
 }
 void LiveBoardObject::dead(){
     for_remove=true;
+    if(core->server)
+        last_event_time=core->total_time;
     if(view!=nullptr)
         static_cast<ViewShadow*>(view)->on_ded();
 }

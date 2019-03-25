@@ -22,12 +22,17 @@ void BoardObjectEvent::get_data(BoardObjectState *s)const{
 MyDataBlock BoardObjectEvent::get_data()const{
     BoardObject *tank=game_core->get_object(target_object_id);
     auto x= tank->get_data();
+    return x;
 }
 
 void BoardObjectEvent::run_game_core(const BoardObjectState *s){
     if(!game_core)
         return;
     target_object_id=s->object_id;
+    auto obj=game_core->get_object(target_object_id);
+    if(obj!=nullptr && s->event_type==BoardObjectState::EventType::REMOVE){
+        static_cast<LiveBoardObject*>(obj)->dead();
+    }
     if(game_core->get_object(target_object_id)==nullptr && s->event_type!=BoardObjectState::EventType::REMOVE){
         //TODO create remove event
         if(s->object_type==BoardObjectState::ObjectType::CircleBlock){

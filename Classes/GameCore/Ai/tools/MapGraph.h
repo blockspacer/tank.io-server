@@ -1,43 +1,81 @@
 #ifndef MAPGRAPH_H
 #define MAPGRAPH_H
 #include "GameCore/PlatformLine.h"
+#include "GameCore/GameCore.h"
 #include "MathShapeUtils/SegmentLine.h"
 #include "MathShapeUtils/EditablePoint.h"
 #include <vector>
 
 namespace MapGraph{
+
+
+    typedef size_t NodeId;
     struct Edge{
-        int v;
+        NodeId v;
         SegmentLine l;
         float minBlockDistance;
     };
-    struct Node:public EditablePoint{
-        int id;
+    struct Node{
+        NodeId id;
         Point pos;
         vector<Edge> neighbors;
         #ifdef EDITOR_MODE
-        void change(const Point &p){
-            pos=p;
-        }
+        struct VectorPointer:public EditablePoint{
+            vector<Node> *v;
+            size_t idx;
+            VectorPointer(vector<Node> *v,size_t idx):v(v),idx(idx){}
+            Point getPos(){
+                return (*v)[idx].pos;
+            }
+            void change(const Point &p){
+                (*v)[idx].pos=p;
+            }
+
+        };
+
         #endif
     };
+    #ifdef EDITOR_MODE
+    struct AiToolsEditorAbstract{
+        virtual void handle_Node(Node::VectorPointer *)=0;
+    };
+    #else
+    struct AiToolsEditorAbstract{
+    };
+    #endif
 
 
     struct MapGraph
     {
-        GameCore *core;
+        GameCore *core=nullptr;
+        AiToolsEditorAbstract *view_handler=nullptr;
         vector<Node> nodes;
+
+        struct shortPath{
+           NodeId nextV;
+           float pathDistance;
+        };
+        shortPath *belman;
         MapGraph(GameCore *core);
 
 
-        int generateNodeId(){
+        NodeId generateNodeId(){
             return nodes.size();
         }
-        int pushNode(Point p){
+        NodeId pushNode(Point p){
             Node n;
             n.pos=p;
+            n.id=nodes.size();
             nodes.push_back(n);
-            return n.id=nodes.size()-1;
+            #ifdef EDITOR_MODE
+            if(core!=nullptr && core->view_handler!=nullptr){
+                auto t=new Node::VectorPointer(&nodes,nodes.size()-1);
+                view_handler->handle_Node(t);
+            }
+            #endif
+
+
+            return n.id;
         }
         // yek jadaval xn dar yn misaze
         void init3_3(Point center,float w,float h,int xn,int yn);
@@ -47,9 +85,16 @@ namespace MapGraph{
 
 
         bool checkLine(Point s,Point f,float r);
-        void refreshEdge(int v,int e_idx);
+        void refreshEdge(NodeId v,int e_idx);
 
         void createEdges(float distance,float tank_r);
+
+
+
+        void belMan();
+
+
+
     };
 }
 #endif // MAPGRAPH_H

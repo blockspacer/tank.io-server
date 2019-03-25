@@ -33,7 +33,7 @@ struct Unit:public LiveBoardObject{
     float target_angle=0;
     float clint_side_target_angle=0;
     float jo_angle;
-    AbstractTankViewHandler *view_handler=nullptr;
+    //AbstractTankViewHandler *view_handler=nullptr;
     float max_angle_speed=0.3*3.1415;
     float angle_speed;
 

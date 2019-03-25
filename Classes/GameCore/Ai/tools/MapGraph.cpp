@@ -9,8 +9,8 @@ namespace MapGraph{
     }
 
     void MapGraph::init3_3(Point center, float w, float h, int xn, int yn){
-        for(int i=0; i<xn; ++i)
-            for(int j=0; j<yn; ++j){
+        for(int i=-xn/2; i<xn/2; ++i)
+            for(int j=-yn/2; j<yn/2; ++j){
                 pushNode(center+Point(w*i/xn,h*j/yn));
             }
 
@@ -20,17 +20,17 @@ namespace MapGraph{
         for(auto t : core->blocks){
             float r=t->r+tank_r;
             int pn=12;
-            r*=1.0/cos(3.1415*2/pn);
+            r*=1.0/cos(3.1415/pn);
             for(int i=0; i<pn;++i)
-                pushNode(t->pos+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn)));
+                pushNode(t->pos+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn))*r);
         }
         for(auto t : core->lines){
             float r=tank_r;
             int pn=12;
-            r*=1.0/cos(3.1415*2/pn);
+            r*=1.0/cos(3.1415/pn);
             for(int i=0; i<pn;++i){
-                pushNode(t->pos+t->l.start+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn)));
-                pushNode(t->pos+t->l.finish+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn)));
+                pushNode(t->pos+t->l.start+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn))*r);
+                pushNode(t->pos+t->l.finish+Point(cos(i*3.1415*2/pn),sin(i*3.1415*2/pn))*r);
             }
         }
 
@@ -51,7 +51,7 @@ namespace MapGraph{
 
     }
 
-    void MapGraph::refreshEdge(int v, int e_idx){
+    void MapGraph::refreshEdge(NodeId v, int e_idx){
         Edge &e=nodes[v].neighbors[e_idx];
         e.l.refresh();
         for(auto t:core->blocks){
@@ -85,5 +85,28 @@ namespace MapGraph{
                     nodes[i].neighbors.push_back(e);
                 }
             }
+    }
+
+    void MapGraph::belMan(){
+        size_t n=nodes.size();
+        belman=new shortPath[n*n];
+        for(size_t i=0; i<n*n; ++i)
+            belman[i].pathDistance=1000000;
+
+        for(auto v : nodes)
+            for(auto e :v.neighbors){
+                belman[v.id*n+e.v].nextV=e.v;
+                belman[v.id*n+e.v].pathDistance=e.l.h_d*2;
+            }
+        for(size_t k=0; k<n; ++k)
+            for(size_t i=0; i<n; ++i)
+                for(size_t j=0; j<n; ++j)
+                    if(belman[i*n+j].pathDistance>belman[i*n+k].pathDistance+belman[k*n+j].pathDistance){
+                        belman[i*n+j].pathDistance=belman[i*n+k].pathDistance+belman[k*n+j].pathDistance;
+                        belman[i*n+j].nextV=belman[i*n+k].nextV;
+                    }
+
+
+
     }
 }

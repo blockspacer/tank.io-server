@@ -23,7 +23,7 @@ Player *GameCore::add_player_with_tank(long long user_id){
 
     tank->user_id=user_id;
     tank->r=100;
-    tank->pos={100,100};
+    tank->pos={0,0};
     tank->angle=PI/2;
     tank->max_speed=400;
     p->tank=tank;
@@ -113,14 +113,18 @@ PlatformLine *GameCore::create_platform_line(Point s,Point f){
 }
 
 void GameCore::init_block(CircleBlock *cblock){
+
+    add_object(cblock);
     blocks.insert(cblock);
-    all_objects[cblock->id]=cblock;
+
     if(cblock->view==nullptr)
         view_handler->handle_block(cblock);
 }
 void GameCore::init_platform_line(PlatformLine *lblock){
+
+    add_object(lblock);
     lines.insert(lblock);
-    all_objects[lblock->id]=lblock;
+
     if(lblock->view==nullptr)
         view_handler->handle_block(lblock);
 }
@@ -137,9 +141,9 @@ Misle *GameCore::create_shot(){
 void GameCore::init_shot(Misle *misle){
     CCLOG("init_shot %lld \n",misle->id);
     misle->born_step=total_time;
+    add_object(misle);
     shots[misle->id]=misle;
-    all_objects[misle->id]=misle;
-     if(misle->view==nullptr)
+    if(misle->view==nullptr)
         view_handler->handle_shot(misle);
 }
 
@@ -171,12 +175,13 @@ BoardObject *GameCore::get_object(OBJ_ID id){
 
 }
 
-void GameCore::init_tank(Tank *misle){
-    tanks[misle->id]=misle;
-    all_objects[misle->id]=misle;
+void GameCore::init_tank(Tank *tank){
+    add_object(tank);
+    tanks[tank->id]=tank;
 
-    if(misle->view==nullptr)
-        view_handler->handle_tank(misle);
+
+    if(tank->view==nullptr)
+        view_handler->handle_tank(tank);
 }
 
 
@@ -192,9 +197,7 @@ void GameCore::update(bool fast){
     if(server)
         for(auto t:tanks)if(t.second!=nullptr)
             if(t.second->healt<0){
-                t.second->for_remove=true;
-                if(t.second->view_handler)
-                    t.second->view_handler->on_ded();
+                t.second->dead();
             }
     for(auto t:all_objects)if(t.second==nullptr || t.second->for_remove){
         for_remove.push_back(t.first);

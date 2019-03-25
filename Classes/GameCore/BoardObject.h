@@ -112,6 +112,9 @@ struct BoardObject{
     BoardObject(GameCore *core);
     void remove();
 
+    void get_removed_data(BoardObjectState *s)const{
+        BoardObject::get_data(s);
+    }
     virtual void get_data(BoardObjectState *s)const;
     virtual MyDataBlock get_data()const;
     virtual void set_data(const BoardObjectState *state);

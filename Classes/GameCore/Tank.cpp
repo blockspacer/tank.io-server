@@ -41,8 +41,8 @@ void Unit::clear_collision(){
                 //force.normalize();
                 //v=force*speed; reflect object
 
-                if(view_handler!=nullptr)
-                    view_handler->show_cross_with_block({0,0},0);
+                if(view!=nullptr)
+                    static_cast<AbstractTankViewHandler*>(view)->show_cross_with_block({0,0},0);
                 //return;
             }
         }
@@ -87,6 +87,8 @@ void Unit::clear_collision(){
 }
 void Unit::get_damage(int x){
     healt-=x;
+    if(core->server)
+        last_event_time=core->total_time;
 
 }
 void Unit::get_data(BoardObjectState *s)const{
@@ -263,13 +265,15 @@ Misle *Tank::shot(OBJ_ID shot_id,bool targeted,float angle2){
         }else
             angle2=canon_angle;
     }
-    t->pos=pos+Point(cos(angle2),sin(angle2))*80;
-    t->_next_pos=pos;
+    t->pos=pos+Point(cos(angle2),sin(angle2))*100;
+    t->_next_pos=t->pos;
     t->angle=angle2;
-    t->speed=2000;
+    t->speed=2500;
     t->z=50;
     t->max_dis=0.8;
     core->init_shot(t);
+    if(core->server)
+        last_event_time=core->total_time;
     return t;
 }
 Tank::InputFarman* Tank::add_action(STEP_VALUE action_time,float f,float s,int client_id){
@@ -385,8 +389,8 @@ void Tank::add_created_action(Input *inp){
 
 
 void Tank::show_shot_animation(STEP_VALUE shot_time){
-    if(view_handler)
-        view_handler->show_shot_animation((shot_time-core->total_time)*core->step_time);
+    if(view)
+        static_cast<AbstractTankViewHandler*>(view)->show_shot_animation((shot_time-core->total_time)*core->step_time);
 }
 
 void Tank::get_data(BoardObjectState *s)const{

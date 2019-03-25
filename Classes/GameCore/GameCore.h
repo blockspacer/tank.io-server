@@ -23,6 +23,8 @@ struct ViewHandler{
     virtual void triger_change(int object_id)=0;
 
 
+
+
 };
 
 
@@ -63,7 +65,9 @@ class GameCore
 
 
 public:
-    map<int,BoardObject *> all_objects;
+    map<OBJ_ID,BoardObject *> zombies;
+
+    map<OBJ_ID,BoardObject *> all_objects;
     ~GameCore(){
         CCLOG("~GameCore");
     }
@@ -152,6 +156,19 @@ public:
     Tank* get_tank(int id);
     Player* get_player(USER_ID id);
     BoardObject *get_object(OBJ_ID id);
+
+    void add_object(BoardObject *obj){
+        zombies[obj->id]=obj;
+        all_objects[obj->id]=obj;
+        if(server)
+            obj->last_event_time=total_time;
+    }
+
+    BoardObject *get_live_or_zombiee(OBJ_ID id){
+        if(zombies.find(id)==zombies.end())
+            return nullptr;
+        return zombies[id];
+    }
 
 
 };

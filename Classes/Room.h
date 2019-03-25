@@ -36,8 +36,22 @@ struct ServerViewHandler:public ViewHandler{
         return ++id_g;
     }/**/
 
-    map<OBJ_ID,STEP_VALUE> time_og_last_change;
-    map<OBJ_ID,map<OBJ_ID,STEP_VALUE> > ackSendedEvent;
+    struct ObjectData{
+        OBJ_ID obj_id;
+        TIME_VALUE t;
+        bool operator<(const ObjectData &r)const{
+                if(t < r.t)
+                    return true;
+                return obj_id<r.obj_id;
+        }
+
+    };
+    struct ClientSyncState{
+        STEP_VALUE lastAck=-1;
+        STEP_VALUE lastSend=-1;
+    };
+    set<ObjectData> list;
+    map<OBJ_ID,map<OBJ_ID,ClientSyncState> > ackSendedEvent;
     //map<OBJ_ID,OBJ_ID> object_2_event;
     //BoardObjectEvent* last_event=nullptr;
     vector<OBJ_ID> last_step_events;
@@ -52,7 +66,7 @@ struct ServerViewHandler:public ViewHandler{
     void handle_tank(Tank *tank);
     void handle_block(CircleBlock *block);
     void handle_block(PlatformLine *block);
-    void get_array(vector<MyDataBlock> &forSend,TankState16Msg *stats);
+    void get_array(vector<MyDataBlock> &forSend,size_t offset,size_t size,TankState16Msg *stats);
     void send_to_user(struct UserPort *up, BoardObjectEvent*);
     void send_to_users(BoardObjectEvent*);
     void triger_change(int object_id);

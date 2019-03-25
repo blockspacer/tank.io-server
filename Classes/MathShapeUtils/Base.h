@@ -1,9 +1,5 @@
 #ifndef MATH_UTILS_BASE_H
 #define MATH_UTILS_BASE_H
-//#include "cocos2d.h"
-
-//using namespace cocos2d;
-
 
 
 class Base2D
