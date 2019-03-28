@@ -23,7 +23,9 @@ void ConstantPathFinderTankAi::refresh(){
             path2.push_back(tmp);
     }
     array=path2;
+#ifdef EDITOR_MODE
     graph->view_handler->show_path(path2);
+#endif
 }
 
 ConstantPathFinderTankAi::ConstantPathFinderTankAi(Tank *target):TankAi(target)
