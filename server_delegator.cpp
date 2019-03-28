@@ -254,7 +254,8 @@ int main(int argc, char* argv[])
 
 
                 lj->init(r,"http",[con=con](RegisterResponse &res){
-                    con->reply_=http::server::reply::stock_json(res.getJson());
+                    rapidjson::Document::AllocatorType allocator;
+                    con->reply_=http::server::reply::stock_json(res.getJson(allocator));
                     con->do_write();
 
                 });

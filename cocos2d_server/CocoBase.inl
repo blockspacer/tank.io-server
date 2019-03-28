@@ -53,7 +53,7 @@ inline void Point::negate()
 
 
 inline void Point::normalize(){
-    float l=sqrt(length_squre());
+    float l=sqrt(lengthSquared());
     if(l<0.00001){
         x=1;
         y=0;
@@ -64,9 +64,9 @@ inline void Point::normalize(){
 }
 
 inline float Point::length(){
-    return sqrt(length_squre());
+    return sqrt(lengthSquared());
 }
-inline float Point::length_squre(){
+inline float Point::lengthSquared(){
     return x*x+y*y;
 }
 
@@ -81,4 +81,5 @@ inline float Point::dot(const Point& v) const
 }
 
 #endif
+
 

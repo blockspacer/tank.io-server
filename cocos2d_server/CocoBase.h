@@ -27,7 +27,7 @@ struct Point{
 
     inline void normalize();
     inline float length();
-    inline float length_squre();
+    inline float lengthSquared();
 
 
     inline Point rotate(const Point& other) const ;

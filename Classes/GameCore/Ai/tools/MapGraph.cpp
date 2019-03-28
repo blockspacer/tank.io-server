@@ -87,13 +87,14 @@ namespace MapGraph{
                     //e.minBlockDistance
                     e.l=s;
                     nodes[i].neighbors.push_back(e);
-
+                    #ifdef EDITOR_MODE
                     if(view_handler && false){
                         vector<Point> res;
                         res.push_back(nodes[i].pos);
                         res.push_back(nodes[j].pos);
                         view_handler->show_path(res);
                     }
+                    #endif
                 }
             }
     }
