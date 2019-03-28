@@ -126,13 +126,13 @@ void ServerViewHandler::init_client(UserPort *up,int last_got_event_id){
 
     try{
         for(size_t i=0; i<forSend.size(); ){
-            cerr<<"new tank state "<<forSend.size()<<endl;
+            //cerr<<"new tank state "<<forSend.size()<<endl;
             char *_data=new char[4*1024];
             TankState16Msg *tank_state=new(_data) TankState16Msg();
             get_array(forSend,i,16,tank_state);
             i+=16;
-            cerr<<tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time<<endl;
-            cerr<<"fff "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
+            //cerr<<tank_state->array.getArray()[0].getPtr<BoardObjectState>()->room_time<<endl;
+            //cerr<<"fff "<<sizeof (TankState16Msg)+sizeof(TankState)<<" "<<tank_state->size_of_data<<endl;
 
             room->server->udp_send(up,tank_state,tank_state->size_of_data);
             delete _data;
@@ -172,7 +172,7 @@ void Room::event_ack(UserPort *up,OBJ_ID event_id,STEP_VALUE step){
 bool Room::update(){
     if(room_is_close)
         return false;
-    if(last_action+60*1000<game_core->total_time)
+    if(last_action+60*10<game_core->total_time)
         return false;
     int i=0;
     while(game_core->get_step_with_time(server->total_time)>game_core->total_time){

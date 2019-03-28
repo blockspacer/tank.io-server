@@ -35,9 +35,13 @@ namespace MapGraph{
 
         #endif
     };
+    struct Path:public vector<Point>{
+        float d;
+    };
     #ifdef EDITOR_MODE
     struct AiToolsEditorAbstract{
         virtual void handle_Node(Node::VectorPointer *)=0;
+        virtual void show_path(const vector<Point> &v)=0;
     };
     #else
     struct AiToolsEditorAbstract{
@@ -93,6 +97,12 @@ namespace MapGraph{
 
         void belMan();
 
+
+
+
+        vector<NodeId> findNodes(Point center,float distance,float tank_r);
+
+        Path findPath(Point s,Point f,float distance,float tank_r);
 
 
     };

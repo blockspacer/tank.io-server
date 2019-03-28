@@ -139,6 +139,7 @@ Tank::Tank(GameCore *core):Unit(core){
     target_range=1000;
 
     max_shot=3;
+    remain_shot=3;
     shot_damage=30;
 }
 void Tank::update_inputs(){

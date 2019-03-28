@@ -34,21 +34,3 @@ void ConstantTankAi::step(){
 
 
 
-ConstantPathFinderTankAi::ConstantPathFinderTankAi(Tank *target):TankAi(target)
-{
-
-}
-void ConstantPathFinderTankAi::step(){
-    Point p=array[currentTargetIndex];
-    p-=target->pos;
-    float angle=Base2D::find_angle<Point>(p);
-    //target->target_angle=angle;
-
-    //target->speed=10000;
-    target->add_action(target->core->total_time,angle,1000,0);
-    if(p.lengthSquared()<200){
-        currentTargetIndex++;
-        if(currentTargetIndex>=array.size())
-            currentTargetIndex=0;
-    }
-}

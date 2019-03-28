@@ -188,6 +188,20 @@ struct Tank:public Unit{
 
     virtual void show_shot_animation(STEP_VALUE shot_time);
     void add_created_action(Input *inp);
+
+
+    virtual float getCoveragePoint(Point p){
+        p-=pos;
+        if(p.length()<300)
+            return  shot_damage*remain_shot*healt;
+        return 0;
+    }
+    virtual float getDamagePoint(Point p){
+        p-=pos;
+        if(p.length()<600)
+            return  shot_damage*remain_shot*healt;
+        return 0;
+    }
 };
 
 

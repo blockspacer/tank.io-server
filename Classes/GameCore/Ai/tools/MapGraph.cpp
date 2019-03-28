@@ -38,9 +38,12 @@ namespace MapGraph{
 
     bool MapGraph::checkLine(Point s, Point f, float r){
         SegmentLine l(s,f);
+        l.refresh();
         for(auto t:core->blocks){
             float d=l.get_distance(t->pos);
-            if(d<r)
+            if(d<r+t->r+20 && d>r+t->r)
+                d+=l.get_distance(t->pos);
+            if(d<r+t->r)
                 return false;
         }
         for(auto t:core->lines)
@@ -54,6 +57,7 @@ namespace MapGraph{
     void MapGraph::refreshEdge(NodeId v, int e_idx){
         Edge &e=nodes[v].neighbors[e_idx];
         e.l.refresh();
+
         for(auto t:core->blocks){
             float d=e.l.get_distance(t->pos);
             d-=t->r;
@@ -83,6 +87,13 @@ namespace MapGraph{
                     //e.minBlockDistance
                     e.l=s;
                     nodes[i].neighbors.push_back(e);
+
+                    if(view_handler && false){
+                        vector<Point> res;
+                        res.push_back(nodes[i].pos);
+                        res.push_back(nodes[j].pos);
+                        view_handler->show_path(res);
+                    }
                 }
             }
     }
@@ -92,7 +103,6 @@ namespace MapGraph{
         belman=new shortPath[n*n];
         for(size_t i=0; i<n*n; ++i)
             belman[i].pathDistance=1000000;
-
         for(auto v : nodes)
             for(auto e :v.neighbors){
                 belman[v.id*n+e.v].nextV=e.v;
@@ -107,6 +117,65 @@ namespace MapGraph{
                     }
 
 
+
+    }
+
+    vector<NodeId> MapGraph::findNodes(Point center, float distance, float tank_r){
+        vector<NodeId> res;
+        for(size_t j=0; j<nodes.size(); ++j){
+            Point d=center-nodes[j].pos;
+            if(d.length()<distance){
+                if(checkLine(center,nodes[j].pos,tank_r))
+                    res.push_back(nodes[j].id);
+
+            }
+        }
+
+        if(res.size()<1){
+            float mind=100000;
+            NodeId besti=0;
+            for(size_t j=0; j<nodes.size(); ++j){
+                Point d=center-nodes[j].pos;
+                if(checkLine(center,nodes[j].pos,tank_r))
+                    if(d.length()<mind){
+                        mind=d.length();
+                        besti=nodes[j].id;
+                    }
+            }
+            if(mind<100000)
+                res.push_back(besti);
+        }
+        return res;
+    }
+
+    Path MapGraph::findPath(Point s, Point f, float distance, float tank_r){
+        vector<NodeId> ss=findNodes(s,distance,tank_r);
+        vector<NodeId> ff=findNodes(f,distance,tank_r);
+        float min_d=1000000;
+        size_t besti=0,bestj=0;
+        for(NodeId i : ss) //TODO check nodeid moust be node index in nodes
+            for(NodeId j:ff){
+                float d=0;
+                d+=(s-nodes[i].pos).length();
+                d+=(f-nodes[j].pos).length();
+                d+=belman[i*nodes.size()+j].pathDistance;
+                if(d<min_d){
+                    min_d=d;
+                    besti=i;
+                    bestj=j;
+                }
+            }
+        Path res;
+        res.push_back(s);
+        res.d=min_d;
+        while(besti!=bestj){
+            res.push_back(nodes[besti].pos);
+            besti=belman[besti*nodes.size()+bestj].nextV;
+        }
+        res.push_back(f);
+        //if(view_handler)
+        //    view_handler->show_path(res);
+        return res;
 
     }
 }

@@ -67,32 +67,36 @@ bool SegmentLine::have_intersec(const SegmentLine &s,Point &out)const{
 }
 
 float SegmentLine::get_distance(Point p){
-    p-pos;
+    p-=pos;
     p=p.rotate(mozdavaj);
-    if(p.x<h_d && p.x>-h_d)
-        return p.y;
-    //TODO not optimum
-    float r1=(p-start).length();
-    float r2=(p-finish).length();
-    return r1<r2 ? r1 : r2;
+    if(-h_d<p.x && p.x<h_d)
+        return abs(p.y);
+
+    if(p.x>0)
+        p.x-=h_d;
+    else
+        p.x+=h_d;
+    return p.length();
 }
 
 float SegmentLine::have_intersec(Point s,Point f,float r){
-    Point p=s-pos;
-    Point mz=p.rotate(mozdavaj);
+    Point s_p=s-pos;
+    s_p=s_p.rotate(mozdavaj);
 
-    Point prv_p=f-pos;
-    Point prv_mz=prv_p.rotate(mozdavaj);
+    Point f_p=f-pos;
+    f_p=f_p.rotate(mozdavaj);
 
-    if((prv_mz.y <-0.00001 && mz.y>0.00001)||
-            (prv_mz.y >0.00001 && mz.y<-0.00001)){
-        float mz_x=(prv_mz.x*abs(mz.y)+mz.x*abs(prv_mz.y))/
-                (abs(prv_mz.y)+abs(mz.y));
+    if((f_p.y <-0.00001 && s_p.y>0.00001)||
+            (f_p.y >0.00001 && s_p.y<-0.00001)){
+        float mz_x=(f_p.x*abs(s_p.y)+s_p.x*abs(f_p.y))/
+                (abs(f_p.y)+abs(s_p.y));
         if(abs(mz_x)<h_d)
             return true;
     }
-    if(abs(mz.x)<h_d && abs(mz.y)<r){
-        float f=r-abs(mz.y);
+    if(abs(s_p.x)<h_d && abs(s_p.y)<r){
+        return true;
+    }
+    if(abs(f_p.x)<h_d && abs(f_p.y)<r){
         return true;
     }
     return false;

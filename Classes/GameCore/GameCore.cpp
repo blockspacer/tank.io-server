@@ -54,9 +54,15 @@ void GameCore::init(){
                 c->pos=Point(i*1200+rand()%600,j*1200+rand()%600);
                 init_block(c);
             }
+        if(false){
+            CircleBlock *c=create_block();
+            c->r=0;
+            c->pos=Point({0,0});
+            init_block(c);
+        }
         //PlatformLine *p=create_platform_line({0,0},{1000,1000});
         //init_platform_line(p);
-        {
+        if(true){
             PlatformLine *p=create_platform_line({500,500},{1000,1000});
             init_platform_line(p);
             CircleBlock *c=create_block();
@@ -64,7 +70,13 @@ void GameCore::init(){
             c->pos=Point(500,500);
             init_block(c);
         }
-        {
+        if(true){
+                        CircleBlock *c=create_block();
+                        c->r=200;
+                        c->pos=Point(1000,1000);
+                        init_block(c);
+         }
+        if(true){
             PlatformLine *p=create_platform_line({1000,1000},{0,2000});
             init_platform_line(p);
 
@@ -87,15 +99,18 @@ void GameCore::init(){
 
             CircleBlock *c=create_block();
             c->r=0;
-            c->pos=Point(0,2000);
+            c->pos=Point(s);
             init_block(c);
+
+            {
+                CircleBlock *c=create_block();
+                c->r=0;
+                c->pos=Point(s+v);
+                init_block(c);
+            }
         }
-        if(true){
-                        CircleBlock *c=create_block();
-                        c->r=200;
-                        c->pos=Point(1000,1000);
-                        init_block(c);
-         }
+
+
 
     }
 
